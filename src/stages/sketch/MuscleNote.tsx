@@ -44,21 +44,21 @@ export function MuscleNote({ muscle }: { muscle: MuscleId | null }) {
               const days = state.split.filter((d) => d.muscles.includes(muscle))
               return (
                 <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
-                  <div>
+                  <div className="w-full sm:w-72 sm:shrink-0">
                     <p className="font-hand text-3xl leading-none text-sketch-sanguine">{i18n.muscle(muscle)}</p>
                     <p className="font-sketch text-sm italic text-sketch-faint">{def.latin}</p>
                     <p className={cn('mt-1 font-sketch text-sm', isBalancedStatus(st) ? 'text-sketch-accent' : 'text-sketch-sanguine')}>
                       {meta.label} — {meta.hint}
                     </p>
                   </div>
-                  <div className="flex flex-col items-start">
+                  <div className="flex shrink-0 flex-col items-start">
                     <Stepper
                       value={sets}
                       onChange={(delta) => dispatch({ type: 'adjustVolume', muscle, delta })}
                       label={t('note.stepperAria', { name: i18n.muscle(muscle) })}
                       size="lg"
                       buttonClassName="border-sketch-lines/50 text-sketch-lines hover:border-sketch-sanguine hover:text-sketch-sanguine"
-                      valueClassName="font-hand text-5xl leading-none text-sketch-lines"
+                      valueClassName="min-w-[2.4ch] font-hand text-5xl leading-none text-sketch-lines"
                     />
                     <span className="mt-0.5 pl-12 font-sketch text-xs text-sketch-faint">{t('note.setsPerWeek')}</span>
                   </div>
