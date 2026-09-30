@@ -137,31 +137,79 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
         <motion.button
           type="button"
           onClick={onBegin}
-          className="group relative mt-8 px-8 py-3 font-hand text-2xl text-sketch-lines focus-visible:outline-sketch-sanguine"
+          className="group relative mt-8 font-hand text-2xl text-sketch-lines focus-visible:outline-sketch-sanguine"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 4.2 * k, duration: 0.6 }}
           whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: 0.97, rotate: -0.6 }}
         >
-          <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 220 60" preserveAspectRatio="none" aria-hidden>
-            <path
-              d="M 6 8 C 60 3 150 5 214 7 C 217 22 216 40 213 53 C 150 57 70 56 7 54 C 3 40 4 20 6 8 Z"
-              fill="rgba(244,235,210,0.55)"
-              stroke="#3b3026"
-              strokeWidth={1.4}
-              vectorEffect="non-scaling-stroke"
-            />
-            <path
-              d="M 9 11 C 70 7 150 9 210 10"
-              fill="none"
-              stroke="#3b3026"
-              strokeWidth={0.7}
-              opacity={0.5}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-          <span className="relative">{tr('intro.begin')}</span>
+          {/* idle: a barely-there float, starts once the button has been drawn */}
+          <motion.span
+            className="relative block px-8 py-3"
+            animate={reduced ? undefined : { y: [0, -2.5, 0] }}
+            transition={{ delay: 6.2, duration: 3.6, ease: 'easeInOut', repeat: Infinity }}
+          >
+            <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 220 60" preserveAspectRatio="none" aria-hidden>
+              {/* paper fill fades in, then the pencil outline is drawn around it */}
+              <motion.path
+                d="M 6 8 C 60 3 150 5 214 7 C 217 22 216 40 213 53 C 150 57 70 56 7 54 C 3 40 4 20 6 8 Z"
+                fill="rgba(244,235,210,0.55)"
+                stroke="none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: (4.2 + 0.5) * k, duration: 0.6 }}
+              />
+              <motion.path
+                d="M 6 8 C 60 3 150 5 214 7 C 217 22 216 40 213 53 C 150 57 70 56 7 54 C 3 40 4 20 6 8 Z"
+                fill="none"
+                stroke="#3b3026"
+                strokeWidth={1.4}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 4.2 * k, duration: 1 * k, ease: 'easeInOut' }}
+              />
+              <motion.path
+                d="M 9 11 C 70 7 150 9 210 10"
+                fill="none"
+                stroke="#3b3026"
+                strokeWidth={0.7}
+                vectorEffect="non-scaling-stroke"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.5 }}
+                transition={{ delay: (4.2 + 0.9) * k, duration: 0.6 * k, ease: 'easeOut' }}
+              />
+              {/* hover: a sanguine pencil underline sketches itself under the label */}
+              <path
+                d="M 34 47 C 70 51 140 43 186 48"
+                pathLength={1}
+                fill="none"
+                stroke="#9c3d25"
+                strokeWidth={1.4}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                className="opacity-0 transition-[stroke-dashoffset,opacity] duration-500 ease-out [stroke-dasharray:1] [stroke-dashoffset:1] group-hover:opacity-90 group-hover:[stroke-dashoffset:0] group-focus-visible:opacity-90 group-focus-visible:[stroke-dashoffset:0]"
+              />
+            </svg>
+            <span className="relative inline-flex items-center gap-2">
+              {tr('intro.begin')}
+              <svg
+                viewBox="0 0 24 12"
+                className="h-3 w-6 -translate-x-1 text-sketch-sanguine opacity-0 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M 1 6.5 C 8 5.5 15 6.5 22 6" />
+                <path d="M 17 1.5 C 19 3.5 21 5 22.5 6 C 21 7.5 19 9 17 10.5" />
+              </svg>
+            </span>
+          </motion.span>
         </motion.button>
       </div>
     </motion.div>
