@@ -1,69 +1,73 @@
 # Gym Gallery
 
-**Artystyczny Silnik Architektury Sylwetki i Hipertrofii** — planer mezocyklu treningowego w formie procesu twórczego:
-szkic na pergaminie → płótno olejne → marmurowa rzeźba.
+> An art-inspired hypertrophy planner: sketch your split on parchment, paint your exercise selection in oil, then carve the final physique in marble. React + TypeScript, no backend, all data stays in your browser.
 
-Aplikacja SPA bez backendu: cały stan (podział, objętość, pigmenty, ciężary, pomiary, deload) zapisuje się w
-`localStorage` przeglądarki pod kluczem `gym-gallery/state/v1`.
+**The Artistic Engine for Physique Architecture and Hypertrophy** — a training-mesocycle planner told as a creative
+process: parchment sketch → oil canvas → marble sculpture.
 
-## Uruchomienie
+A backend-free SPA: all state (split, volume, pigments, lifts, measurements, deload) is saved to the browser's
+`localStorage` under the key `gym-gallery/state/v1`.
+
+> The interface is currently in Polish; an additional language is planned.
+
+## Getting started
 
 ```bash
 npm install
-npm run dev        # serwer deweloperski
-npm run build      # typecheck (tsc -b) + build produkcyjny do dist/
-npm run preview    # podgląd buildu
+npm run dev        # development server
+npm run build      # typecheck (tsc -b) + production build to dist/
+npm run preview    # preview the build
 npm run lint       # oxlint
 ```
 
-Wymagany Node.js 20.19+ lub 22.12+ (Vite 8).
+Requires Node.js 20.19+ or 22.12+ (Vite 8).
 
-## Wdrożenie na GitHub Pages
+## Deploying to GitHub Pages
 
-`vite.config.ts` ma ustawione `base: './'`, więc build działa pod dowolnym adresem
-(`https://<użytkownik>.github.io/<repozytorium>/`) bez zmian w konfiguracji.
+`vite.config.ts` sets `base: './'`, so the build works under any URL
+(`https://<user>.github.io/<repository>/`) without configuration changes.
 
-1. Wypchnij repozytorium na GitHub (gałąź `main`).
-2. W repozytorium: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Workflow `.github/workflows/deploy.yml` zbuduje i opublikuje aplikację przy każdym pushu na `main`.
+1. Push the repository to GitHub (branch `main`).
+2. In the repository: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. The `.github/workflows/deploy.yml` workflow builds and publishes the app on every push to `main`.
 
-## Trzy etapy
+## The three stages
 
-| Etap | Co robisz | Mechanika |
+| Stage | What you do | Mechanics |
 | --- | --- | --- |
-| **I. Szkic** (pergamin, ołówek, sangwina) | Projektujesz szkielet mezocyklu | Szablon *5-Day V-Taper Split* (Upper / Lower / Push / Pull / Legs) z edycją dni i partii; klikalna płyta anatomiczna (przód + tył); wskaźniki MEV / MAV / MRV liczone na bieżąco. Gdy każda partia mieści się w MEV–MAV, pojawia się pieczęć. |
-| **II. Płótno olejne** | Dobierasz ćwiczenia według krzywej oporu | Paleta pigmentów: faza rozciągnięcia vs. opór szczytowy (każda partia potrzebuje obu); mapa nasycenia — partie poniżej MEV są wyblakłe, ponad MAV/MRV ciemnieją; wskaźnik SFR i budżety zmęczenia osiowego i stawowego; kompozycja tygodnia rozpisana na sesje. |
-| **III. Marmurowa rzeźba** | Oceniasz proporcje, progresję i zmęczenie | Wskaźnik V-taper (barki : talia vs. φ 1.618) z projekcją; e1RM ze wzoru Brzyckiego i tonaż tydzień po tygodniu; matryca obciążenia względem MRV; pęknięcia marmuru przy przekroczeniu MRV lub zdolności centralnej; **Carve Deload** — odcina 40% objętości i generuje gotowy plan tygodnia regeneracyjnego (kopiuj / drukuj). |
+| **I. Sketch** (parchment, pencil, sanguine) | Design the skeleton of the mesocycle | *5-Day V-Taper Split* template (Upper / Lower / Push / Pull / Legs) with editable days and muscle groups; clickable anatomical plate (front + back); live MEV / MAV / MRV indicators. Once every muscle sits within MEV–MAV, a seal appears. |
+| **II. Oil Canvas** | Choose exercises by resistance profile | Pigment palette: stretched-position vs. peak-contraction resistance (each muscle needs both); saturation map — muscles below MEV stay faded, those above MAV/MRV darken; SFR (stimulus-to-fatigue) indicator, axial and joint fatigue budgets; the week composed into sessions. |
+| **III. Marble Sculpture** | Assess proportions, progression and fatigue | V-taper indicator (shoulders : waist vs. φ 1.618) with projection; e1RM (Brzycki formula) and tonnage week by week; load matrix against MRV; the marble cracks when MRV or central capacity is exceeded; **Carve Deload** cuts 40% of volume and generates a ready-made recovery-week plan (copy / print). |
 
-Przejścia między etapami: kubistyczne plamy farby (Canvas 2D) oraz dłuto rozbijające blok marmuru (Canvas 2D).
-Przy włączonym w systemie „ograniczeniu ruchu” animacje są skracane.
+Transitions between stages: cubist paint splashes (Canvas 2D) and a chisel shattering a marble block (Canvas 2D).
+With the system's "reduce motion" setting enabled, animations are shortened.
 
-## Struktura
+## Structure
 
 ```
 src/
-  types/                 typy domenowe (MuscleId, GalleryState, MesoWeek…)
-  data/                  partie i punkty MEV/MAV/MRV, biblioteka ćwiczeń, szablon V-Taper
-  lib/                   czysta logika (bez Reacta):
-    volume.ts            status objętości, rozkład serii na dni, analiza szkicu
-    sfr.ts               SFR, budżety zmęczenia, podział serii na ćwiczenia, auto-kompozycja
-    schedule.ts          rozpisanie tygodnia na sesje i ćwiczenia
-    progression.ts       Brzycki, rampa objętości, wykrywanie MRV, deload −40%
-    vtaper.ts            proporcja barki:talia i projekcja
-  state/                 reducer, walidacja localStorage, kontekst z wyliczeniami
+  types/                 domain types (MuscleId, GalleryState, MesoWeek…)
+  data/                  muscles and MEV/MAV/MRV landmarks, exercise library, V-Taper template
+  lib/                   pure logic (no React):
+    volume.ts            volume status, distribution of sets across days, sketch analysis
+    sfr.ts               SFR, fatigue budgets, splitting sets across exercises, auto-composition
+    schedule.ts          laying out the week into sessions and exercises
+    progression.ts       Brzycki, volume ramp, MRV detection, deload −40%
+    vtaper.ts            shoulder:waist ratio and projection
+  state/                 reducer, localStorage validation, context with derived analyses
   components/
-    anatomy/             geometria sylwetki + warianty: szkic, olej, marmur
-    transitions/         intro ołówkiem, przejście farbą, przejście dłutem
-    charts/              lekkie wykresy SVG z podpowiedziami
-    common/              pieczęć, nawigacja „proweniencji”, liczniki, paski progów
+    anatomy/             body geometry + variants: sketch, oil, marble
+    transitions/         pencil intro, paint transition, chisel transition
+    charts/              lightweight SVG charts with tooltips
+    common/              seal, "provenance" navigation, steppers, landmark bars
   stages/                sketch/ · oil/ · marble/
 ```
 
-## Założenia modelu
+## Model assumptions
 
-Widełki MEV / MAV / MRV, skale bodźca i zmęczenia ćwiczeń, budżety zmęczenia oraz projekcja V-taper to
-heurystyki orientacyjne dla średniozaawansowanego trenującego — punkt wyjścia do własnych obserwacji, nie porada
-medyczna. Wszystkie stałe są w `src/data` i na początku plików w `src/lib`, więc łatwo je dostroić.
+The MEV / MAV / MRV ranges, exercise stimulus and fatigue ratings, fatigue budgets and the V-taper projection are
+rough heuristics for an intermediate lifter — a starting point for your own observations, not medical advice. All
+constants live in `src/data` and at the top of the files in `src/lib`, so they are easy to tune.
 
-Fonty (Caveat, EB Garamond, Playfair Display, Cormorant Garamond, Cinzel, Space Mono) są hostowane lokalnie przez
-pakiety `@fontsource` — aplikacja nie wysyła zapytań do Google Fonts.
+Fonts (Caveat, EB Garamond, Playfair Display, Cormorant Garamond, Cinzel, Space Mono) are self-hosted through
+`@fontsource` packages — the app makes no requests to Google Fonts.
