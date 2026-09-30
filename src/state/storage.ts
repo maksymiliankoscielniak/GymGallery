@@ -102,7 +102,7 @@ export function loadState(): GalleryState {
   return {
     version: 1,
     stage,
-    introSeen: raw.introSeen === true,
+    introSeen: false, // the pencil intro plays on every page load (not restored from storage)
     split: split.length ? split : defaults.split,
     volume,
     pigments,
