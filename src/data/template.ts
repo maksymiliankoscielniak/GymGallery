@@ -11,18 +11,18 @@ import { EXERCISES } from './exercises'
 
 export const TEMPLATE_NAME = '5-Day V-Taper Split'
 
-/** Domyślny, estetyczny szablon: Upper / Lower / Push / Pull / Legs. */
+/** Default aesthetic template: Upper / Lower / Push / Pull / Legs. Focus text is localized at display time (focus: null). */
 export function createVTaperSplit(): SplitDay[] {
   return [
-    { id: 'd-upper', name: 'Upper', focus: 'Góra — szerokość i gęstość', muscles: ['chest', 'lats', 'shoulders', 'triceps'] },
-    { id: 'd-lower', name: 'Lower', focus: 'Dół — fundament kolumn', muscles: ['quads', 'hamstrings', 'abs'] },
-    { id: 'd-push', name: 'Push', focus: 'Pchanie — obręcz barkowa', muscles: ['chest', 'shoulders', 'triceps'] },
-    { id: 'd-pull', name: 'Pull', focus: 'Ciąganie — skrzydła najszerszego', muscles: ['lats', 'shoulders', 'biceps'] },
-    { id: 'd-legs', name: 'Legs', focus: 'Nogi — proporcja i podstawa', muscles: ['quads', 'hamstrings', 'biceps', 'abs'] },
+    { id: 'd-upper', name: 'Upper', focus: null, muscles: ['chest', 'lats', 'shoulders', 'triceps'] },
+    { id: 'd-lower', name: 'Lower', focus: null, muscles: ['quads', 'hamstrings', 'abs'] },
+    { id: 'd-push', name: 'Push', focus: null, muscles: ['chest', 'shoulders', 'triceps'] },
+    { id: 'd-pull', name: 'Pull', focus: null, muscles: ['lats', 'shoulders', 'biceps'] },
+    { id: 'd-legs', name: 'Legs', focus: null, muscles: ['quads', 'hamstrings', 'biceps', 'abs'] },
   ]
 }
 
-/** Startowa objętość tygodnia (tydzień 1 mezocyklu) — mieści się w MEV–MAV. */
+/** Starting weekly volume (mesocycle week 1) — sits within MEV–MAV. */
 export function createDefaultVolume(): VolumePlan {
   return {
     shoulders: 18,
@@ -37,8 +37,8 @@ export function createDefaultVolume(): VolumePlan {
 }
 
 /**
- * Startowa paleta: każda partia ma tylko pigment fazy rozciągnięcia.
- * Etap II polega na uzupełnieniu palety o opór szczytowy i zbalansowaniu SFR.
+ * Starting palette: every muscle group has only a stretch-phase pigment.
+ * Stage II is about completing the palette with peak resistance and balancing SFR.
  */
 export function createDefaultPigments(): PigmentPlan {
   return {

@@ -2,7 +2,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Hammer, X } from 'lucide-react'
 import { MUSCLES } from '../../data/muscles'
 import { cn } from '../../lib/cn'
-import { AXIAL_BUDGET, JOINT_BUDGET, SFR_GRADE_LABEL, SFR_TARGET } from '../../lib/sfr'
+import { useI18n } from '../../i18n/useI18n'
+import { AXIAL_BUDGET, JOINT_BUDGET, SFR_TARGET } from '../../lib/sfr'
 import { isBalancedStatus, volumeStatus } from '../../lib/volume'
 import { useGallery } from '../../state/GalleryContext'
 
@@ -21,6 +22,7 @@ function arc(from: number, to: number, r: number) {
 }
 
 function BudgetBar({ label, value, budget }: { label: string; value: number; budget: number }) {
+  const { t } = useI18n()
   const ratio = value / budget
   const over = ratio > 1
   return (
@@ -29,7 +31,7 @@ function BudgetBar({ label, value, budget }: { label: string; value: number; bud
         <span className="text-oil-cream/70">{label}</span>
         <span className={cn('font-mono text-xs tabular', over ? 'text-[#e0786c]' : 'text-oil-cream/60')}>
           {Math.round(value)} / {budget}
-          {over && ' — ponad budżet'}
+          {over && t('sfr.overBudget')}
         </span>
       </div>
       <div className="relative mt-1 h-2 overflow-hidden rounded-full bg-oil-cream/8">
@@ -45,31 +47,33 @@ function BudgetBar({ label, value, budget }: { label: string; value: number; bud
   )
 }
 
-/** Wskaźnik SFR i budżety zmęczenia + wyzwalacz przejścia do rzeźby. */
+/** SFR indicator and fatigue budgets + the trigger for the transition to the sculpture. */
 export function SfrPanel({ onAdvance }: { onAdvance: () => void }) {
   const { state, canvas } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
   const sfr = canvas.globalSfr
   const angle = -90 + (Math.min(SFR_MAX, sfr) / SFR_MAX) * 180
 
   const varietyOk = MUSCLES.every((m) => canvas.perMuscle[m.id].hasStretch && canvas.perMuscle[m.id].hasPeak)
   const volumeOk = MUSCLES.every((m) => isBalancedStatus(volumeStatus(m.id, state.volume[m.id])))
   const checks = [
-    { ok: varietyOk, label: 'Każda partia ma pigment rozciągnięcia i skurczu' },
-    { ok: volumeOk, label: 'Objętość każdej partii w strefie MEV–MAV' },
-    { ok: sfr >= SFR_TARGET, label: `Globalny SFR ≥ ${SFR_TARGET.toFixed(1)}` },
-    { ok: canvas.axialLoad <= AXIAL_BUDGET, label: 'Obciążenie osiowe w budżecie' },
-    { ok: canvas.jointLoad <= JOINT_BUDGET, label: 'Obciążenie stawowe w budżecie' },
+    { ok: varietyOk, label: t('sfr.check.variety') },
+    { ok: volumeOk, label: t('sfr.check.volume') },
+    { ok: sfr >= SFR_TARGET, label: t('sfr.check.sfr', { target: SFR_TARGET.toFixed(1) }) },
+    { ok: canvas.axialLoad <= AXIAL_BUDGET, label: t('sfr.check.axial') },
+    { ok: canvas.jointLoad <= JOINT_BUDGET, label: t('sfr.check.joint') },
   ]
 
   return (
     <section className="oil-card flex flex-col p-4 sm:p-5" aria-labelledby="sfr-title">
       <h2 id="sfr-title" className="font-oil text-2xl text-oil-cream">
-        Wskaźnik SFR
+        {t('sfr.title')}
       </h2>
-      <p className="font-body text-base italic text-oil-cream/55">Stimulus-to-Fatigue — bodziec hipertroficzny względem kosztu zmęczenia.</p>
+      <p className="font-body text-base italic text-oil-cream/55">{t('sfr.subtitle')}</p>
 
       <div className="mt-2 flex flex-col items-center gap-4 sm:flex-row sm:items-end">
-        <svg viewBox="0 0 200 118" className="w-full max-w-[15rem]" role="img" aria-label={`Globalny SFR ${sfr.toFixed(2)} — ${SFR_GRADE_LABEL[canvas.grade]}`}>
+        <svg viewBox="0 0 200 118" className="w-full max-w-[15rem]" role="img" aria-label={t('sfr.gaugeAria', { value: sfr.toFixed(2), grade: i18n.grade(canvas.grade) })}>
           <path d={arc(0, SFR_MAX, 80)} stroke="rgba(239,226,196,0.08)" strokeWidth={16} fill="none" />
           <path d={arc(0, SFR_TARGET, 80)} stroke={GRADE_COLOR.costly} strokeOpacity={0.55} strokeWidth={14} fill="none" />
           <path d={arc(SFR_TARGET + 0.02, 2.2, 80)} stroke={GRADE_COLOR.balanced} strokeOpacity={0.6} strokeWidth={14} fill="none" />
@@ -90,14 +94,14 @@ export function SfrPanel({ onAdvance }: { onAdvance: () => void }) {
         <div className="text-center sm:text-left">
           <p className="font-oil text-5xl leading-none text-oil-cream tabular">{sfr.toFixed(2)}</p>
           <p className="mt-1 font-body text-lg italic" style={{ color: GRADE_COLOR[canvas.grade] }}>
-            {SFR_GRADE_LABEL[canvas.grade]}
+            {i18n.grade(canvas.grade)}
           </p>
         </div>
       </div>
 
       <div className="mt-4 space-y-3">
-        <BudgetBar label="Zmęczenie osiowe (kręgosłup, CUN)" value={canvas.axialLoad} budget={AXIAL_BUDGET} />
-        <BudgetBar label="Zmęczenie stawowe" value={canvas.jointLoad} budget={JOINT_BUDGET} />
+        <BudgetBar label={t('sfr.axial')} value={canvas.axialLoad} budget={AXIAL_BUDGET} />
+        <BudgetBar label={t('sfr.joint')} value={canvas.jointLoad} budget={JOINT_BUDGET} />
       </div>
 
       <ul className="mt-5 space-y-1.5 font-body text-[15px]">
@@ -105,7 +109,7 @@ export function SfrPanel({ onAdvance }: { onAdvance: () => void }) {
           <li key={c.label} className={cn('flex items-center gap-2', c.ok ? 'text-oil-cream/75' : 'text-[#e0786c]')}>
             {c.ok ? <Check className="h-4 w-4 shrink-0 text-oil-ochre" aria-hidden /> : <X className="h-4 w-4 shrink-0" aria-hidden />}
             <span>{c.label}</span>
-            <span className="sr-only">{c.ok ? '— spełnione' : '— niespełnione'}</span>
+            <span className="sr-only">{c.ok ? t('sfr.met') : t('sfr.unmet')}</span>
           </li>
         ))}
       </ul>
@@ -134,8 +138,8 @@ export function SfrPanel({ onAdvance }: { onAdvance: () => void }) {
                   <Hammer className="h-6 w-6" aria-hidden />
                 </motion.span>
                 <span className="text-left">
-                  <span className="block font-oil text-lg text-oil-cream">Przekaż rzeźbiarzowi</span>
-                  <span className="block font-body text-sm italic text-oil-cream/55">uderz dłutem w marmur — Etap III</span>
+                  <span className="block font-oil text-lg text-oil-cream">{t('sfr.handoff')}</span>
+                  <span className="block font-body text-sm italic text-oil-cream/55">{t('sfr.handoffHint')}</span>
                 </span>
               </span>
             </motion.button>
@@ -147,7 +151,7 @@ export function SfrPanel({ onAdvance }: { onAdvance: () => void }) {
               exit={{ opacity: 0 }}
               className="text-center font-body text-base italic text-oil-cream/45"
             >
-              Wyzwalacz dłuta pojawi się, gdy profil biomechaniczny będzie zbalansowany.
+              {t('sfr.waiting')}
             </motion.p>
           )}
         </AnimatePresence>

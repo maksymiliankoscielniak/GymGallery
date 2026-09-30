@@ -4,6 +4,7 @@ import { Provenance } from './components/common/Provenance'
 import { ChiselTransition } from './components/transitions/ChiselTransition'
 import { IntroOverlay } from './components/transitions/IntroOverlay'
 import { PaintTransition } from './components/transitions/PaintTransition'
+import { useI18n } from './i18n/useI18n'
 import { cn } from './lib/cn'
 import { useGallery } from './state/GalleryContext'
 import { MarbleStage } from './stages/marble/MarbleStage'
@@ -31,6 +32,7 @@ const FOOTER: Record<StageId, string> = {
 
 export default function App() {
   const { state, dispatch, sketch, canvas } = useGallery()
+  const { t } = useI18n()
   const reduced = useReducedMotion() ?? false
   const [transition, setTransition] = useState<TransitionKind | null>(null)
 
@@ -88,8 +90,7 @@ export default function App() {
             {state.stage === 'oil' && <OilStage onAdvance={() => advance('chisel')} />}
             {state.stage === 'marble' && <MarbleStage />}
             <footer className={cn('mx-auto max-w-7xl px-4 pb-8 text-sm sm:px-6', FOOTER[state.stage])}>
-              Plan zapisuje się automatycznie w tej przeglądarce (localStorage) — bez kont i bez serwera. Wartości MEV / MAV /
-              MRV i prognozy to modele orientacyjne, nie porada medyczna.
+              {t('app.footer')}
             </footer>
           </motion.div>
         </AnimatePresence>

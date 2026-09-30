@@ -1,13 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Plus, Wand2, X } from 'lucide-react'
-import { EXERCISE_MAP, PROFILE_LABEL, exercisesFor } from '../../data/exercises'
+import { exercisesFor } from '../../data/exercises'
 import { MUSCLES, MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import { PIGMENT_LAYERS, paintStateFor } from '../../components/anatomy/paint'
 import { LandmarkBar } from '../../components/common/LandmarkBar'
 import { Stepper } from '../../components/common/Stepper'
 import { cn } from '../../lib/cn'
 import { exerciseSfr, sfrGrade } from '../../lib/sfr'
-import { STATUS_META, isBalancedStatus, volumeStatus } from '../../lib/volume'
+import { isBalancedStatus, volumeStatus } from '../../lib/volume'
 import { useGallery } from '../../state/GalleryContext'
 import type { ExerciseDef, MuscleId, ResistanceProfile } from '../../types'
 
@@ -23,11 +24,12 @@ const GRADE_TEXT = {
 } as const
 
 function Dots({ value, label }: { value: number; label: string }) {
+  const { t } = useI18n()
   const filled = Math.round(value / 2)
   return (
     <span className="inline-flex items-center gap-1" title={`${label}: ${value}/10`}>
       <span className="font-mono text-[9px] uppercase text-oil-cream/40">{label}</span>
-      <span className="inline-flex gap-[2px]" aria-label={`${label} ${value} na 10`}>
+      <span className="inline-flex gap-[2px]" aria-label={t('palette.dotsAria', { label, value })}>
         {Array.from({ length: 5 }, (_, i) => (
           <span key={i} className={cn('h-1.5 w-1.5 rounded-full', i < filled ? 'bg-oil-cream/70' : 'bg-oil-cream/12')} />
         ))}
@@ -36,9 +38,11 @@ function Dots({ value, label }: { value: number; label: string }) {
   )
 }
 
-/** Paleta pigmentów — dobór ćwiczeń według profilu krzywej oporu. */
+/** Pigment palette — choosing exercises by resistance-curve profile. */
 export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
   const { state, dispatch, canvas } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
   const def = MUSCLE_MAP[selected]
   const sets = state.volume[selected]
   const st = volumeStatus(selected, sets)
@@ -70,44 +74,46 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
                 dispatch(active ? { type: 'removePigment', muscle: selected, exerciseId: ex.id } : { type: 'addPigment', muscle: selected, exerciseId: ex.id })
               }
               aria-pressed={active}
-              aria-label={active ? `Usuń pigment: ${ex.name}` : `Dodaj pigment: ${ex.name}`}
+              aria-label={active ? t('palette.removeAria', { name: i18n.exercise(ex.id) }) : t('palette.addAria', { name: i18n.exercise(ex.id) })}
               className="relative mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-oil-cream/25 transition-transform hover:scale-110 disabled:opacity-30"
               style={{
                 background: active ? `radial-gradient(circle at 35% 30%, ${colors[0]}, ${colors[1]} 55%, ${colors[2]})` : 'transparent',
               }}
-              title={full ? 'Maksymalnie 4 pigmenty na partię' : undefined}
+              title={full ? t('palette.full') : undefined}
             >
               {active ? <Check className="h-3.5 w-3.5 text-oil-cream" aria-hidden /> : <Plus className="h-3.5 w-3.5 text-oil-cream/60" aria-hidden />}
             </button>
             <div className="min-w-0 flex-1">
               <p className={cn('font-body text-[15px] font-semibold leading-snug', active ? 'text-oil-cream' : 'text-oil-cream/70')}>
-                {ex.name}
-                {ex.note && <span className="ml-1 text-xs font-medium italic text-oil-cream/45">({ex.note})</span>}
+                {i18n.exercise(ex.id)}
+                {i18n.exerciseNote(ex.id) && (
+                  <span className="ml-1 text-xs font-medium italic text-oil-cream/45">({i18n.exerciseNote(ex.id)})</span>
+                )}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className={cn('font-mono text-[11px]', GRADE_TEXT[grade])}>SFR {sfr.toFixed(2)}</span>
-                <Dots value={ex.jointFatigue} label="staw" />
-                <Dots value={ex.axialFatigue} label="oś" />
+                <Dots value={ex.jointFatigue} label={t('palette.joint')} />
+                <Dots value={ex.axialFatigue} label={t('palette.axial')} />
               </div>
             </div>
             {active && (
               <span className="shrink-0 text-right font-mono text-xs text-oil-ochre">
                 <span className="text-base tabular">{setsById[ex.id] ?? 0}</span>
-                <span className="block text-[9px] uppercase tracking-wider text-oil-cream/40">serii</span>
+                <span className="block text-[9px] uppercase tracking-wider text-oil-cream/40">{t('palette.setsUnit')}</span>
               </span>
             )}
           </div>
           {active && stroke && (
             <div className="mt-2 flex items-center gap-2 pl-9">
-              <span className="font-body text-xs italic text-oil-cream/50">grubość warstwy</span>
-              <div className="flex gap-1" role="radiogroup" aria-label={`Udział ${ex.name} w objętości`}>
+              <span className="font-body text-xs italic text-oil-cream/50">{t('palette.layer')}</span>
+              <div className="flex gap-1" role="radiogroup" aria-label={t('palette.shareAria', { name: i18n.exercise(ex.id) })}>
                 {[1, 2, 3].map((n) => (
                   <button
                     key={n}
                     type="button"
                     role="radio"
                     aria-checked={stroke.layers === n}
-                    aria-label={`${n} z 3`}
+                    aria-label={t('palette.layerAria', { n })}
                     onClick={() => dispatch({ type: 'setPigmentLayers', muscle: selected, exerciseId: ex.id, layers: n })}
                     className={cn(
                       'h-3 rounded-full border border-oil-gold/50 transition-all',
@@ -127,15 +133,16 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
   const column = (profile: ResistanceProfile) => {
     const has = profile === 'stretch' ? muscleCanvas.hasStretch : muscleCanvas.hasPeak
     const n = profile === 'stretch' ? muscleCanvas.stretchSets : muscleCanvas.peakSets
+    const label = i18n.profile(profile)
     return (
       <div>
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h4 className="font-oil text-base text-oil-cream">
-            {PROFILE_LABEL[profile].title}
-            <span className="ml-1.5 font-body text-sm italic text-oil-cream/45">{PROFILE_LABEL[profile].subtitle}</span>
+            {label.title}
+            <span className="ml-1.5 font-body text-sm italic text-oil-cream/45">{label.subtitle}</span>
           </h4>
           <span className={cn('shrink-0 font-mono text-[11px]', has ? 'text-oil-cream/55' : 'text-[#e0786c]')}>
-            {has ? `${n} serii` : 'brak pigmentu'}
+            {has ? t('palette.setsCount', { n }) : t('palette.noPigment')}
           </span>
         </div>
         <ul className="flex flex-col gap-1.5">{exercisesFor(selected, profile).map(renderExercise)}</ul>
@@ -148,9 +155,9 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="palette-title" className="font-oil text-2xl text-oil-cream">
-            Paleta pigmentów
+            {t('palette.title')}
           </h2>
-          <p className="font-body text-base italic text-oil-cream/55">Każda partia potrzebuje obu krzywych oporu.</p>
+          <p className="font-body text-base italic text-oil-cream/55">{t('palette.hint')}</p>
         </div>
         <button
           type="button"
@@ -158,13 +165,13 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
           disabled={missing === 0}
           className="flex items-center gap-1.5 rounded-full border border-oil-gold/40 px-3 py-1.5 font-body text-sm font-semibold text-oil-ochre transition-colors hover:bg-oil-gold/10 disabled:opacity-35"
         >
-          <Wand2 className="h-4 w-4" aria-hidden /> Dobierz brakujące pigmenty
+          <Wand2 className="h-4 w-4" aria-hidden /> {t('palette.auto')}
           {missing > 0 && <span className="rounded-full bg-oil-gold/20 px-1.5 font-mono text-[10px]">{missing}</span>}
         </button>
       </div>
 
-      {/* wybór partii — plamy farby */}
-      <div className="no-scrollbar -mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Partia mięśniowa">
+      {/* muscle group picker — paint blobs */}
+      <div className="no-scrollbar -mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label={t('palette.muscleTabs')}>
         {MUSCLES.map((m) => {
           const paint = paintStateFor(m.id, state.volume[m.id])
           const colors = PIGMENT_LAYERS[m.hue]
@@ -201,7 +208,7 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
                   {ok ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
                 </span>
               </span>
-              <span className={cn('font-body text-xs font-semibold', isSel ? 'text-oil-ochre' : 'text-oil-cream/60')}>{m.short}</span>
+              <span className={cn('font-body text-xs font-semibold', isSel ? 'text-oil-ochre' : 'text-oil-cream/60')}>{i18n.muscleShort(m.id)}</span>
             </button>
           )
         })}
@@ -218,15 +225,15 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
         >
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-oil-gold/15 py-3">
             <div className="min-w-0">
-              <h3 className="font-oil text-xl italic text-oil-cream">{def.name}</h3>
+              <h3 className="font-oil text-xl italic text-oil-cream">{i18n.muscle(selected)}</h3>
               <p className={cn('font-body text-sm', isBalancedStatus(st) ? 'text-oil-cream/55' : 'text-[#e0786c]')}>
-                {STATUS_META[st].label} · SFR partii {muscleCanvas.sfr ? muscleCanvas.sfr.toFixed(2) : '—'}
+                {i18n.status(st).label} · {t('palette.muscleSfr', { value: muscleCanvas.sfr ? muscleCanvas.sfr.toFixed(2) : '—' })}
               </p>
             </div>
             <Stepper
               value={sets}
               onChange={(delta) => dispatch({ type: 'adjustVolume', muscle: selected, delta })}
-              label={`${def.name} — tygodniowa objętość`}
+              label={t('palette.stepperAria', { name: i18n.muscle(selected) })}
               buttonClassName="border-oil-gold/40 text-oil-ochre hover:bg-oil-gold/10"
               valueClassName="font-oil text-3xl text-oil-cream"
             />
@@ -238,7 +245,7 @@ export function PigmentPalette({ selected, onSelect }: PigmentPaletteProps) {
           </div>
           {strokes.length > 0 && (
             <p className="mt-3 font-body text-sm italic text-oil-cream/45">
-              Nałożone: {strokes.map((s) => EXERCISE_MAP[s.exerciseId]?.name).filter(Boolean).join(' · ')}
+              {t('palette.applied', { list: strokes.map((s) => i18n.exercise(s.exerciseId)).join(' · ') })}
             </p>
           )}
         </motion.div>

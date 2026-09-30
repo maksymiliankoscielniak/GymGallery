@@ -11,9 +11,24 @@ const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object
 const num = (v: unknown, fallback: number, min = -Infinity, max = Infinity) =>
   typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback
 
+/** Focus texts the Polish-only build used to store as literal values; they map back to the localized defaults. */
+const LEGACY_FOCUS = new Set([
+  'Góra — szerokość i gęstość',
+  'Dół — fundament kolumn',
+  'Pchanie — obręcz barkowa',
+  'Ciąganie — skrzydła najszerszego',
+  'Nogi — proporcja i podstawa',
+  'Nowa karta szkicownika',
+])
+
+function sanitizeFocus(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  return LEGACY_FOCUS.has(v) ? null : v.slice(0, 60)
+}
+
 /**
- * Wczytuje i waliduje stan z localStorage. Uszkodzone lub niepełne dane są
- * uzupełniane wartościami domyślnymi, więc aplikacja zawsze startuje poprawnie.
+ * Loads and validates state from localStorage. Corrupt or incomplete data is
+ * filled in with defaults, so the app always starts correctly.
  */
 export function loadState(): GalleryState {
   const defaults = createDefaultState()
@@ -34,8 +49,8 @@ export function loadState(): GalleryState {
         .filter(isObj)
         .map((d, i) => ({
           id: typeof d.id === 'string' ? d.id : `d-${i}`,
-          name: typeof d.name === 'string' ? d.name.slice(0, 24) : `Dzień ${i + 1}`,
-          focus: typeof d.focus === 'string' ? d.focus.slice(0, 60) : '',
+          name: typeof d.name === 'string' ? d.name.slice(0, 24).replace(/^Dzień (\d+)$/, 'Day $1') : `Day ${i + 1}`,
+          focus: sanitizeFocus(d.focus),
           muscles: Array.isArray(d.muscles)
             ? (d.muscles.filter((m) => MUSCLE_IDS.includes(m as MuscleId)) as MuscleId[])
             : [],
@@ -102,7 +117,7 @@ export function saveState(state: GalleryState): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
-    /* tryb prywatny / brak miejsca — aplikacja działa dalej w pamięci */
+    /* private mode / no space — the app keeps working in memory */
   }
 }
 
@@ -110,6 +125,6 @@ export function clearState(): void {
   try {
     window.localStorage.removeItem(STORAGE_KEY)
   } catch {
-    /* ignoruj */
+    /* ignore */
   }
 }

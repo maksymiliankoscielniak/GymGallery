@@ -1,8 +1,8 @@
 import { seededRandom } from '../../lib/random'
 
 /**
- * Proceduralna tekstura białego marmuru (kararyjskiego) na offscreen canvas:
- * gradient bazowy, chmurki mineralne, żyłki i światłocień z lewego górnego rogu.
+ * Procedural white (Carrara) marble texture on an offscreen canvas:
+ * base gradient, mineral clouds, veins and chiaroscuro from the upper left.
  */
 export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42): HTMLCanvasElement {
   const c = document.createElement('canvas')
@@ -20,7 +20,7 @@ export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42
   ctx.fillStyle = base
   ctx.fillRect(0, 0, W, H)
 
-  // chmurki mineralne
+  // mineral clouds
   for (let i = 0; i < 70; i++) {
     const x = rnd() * W
     const y = rnd() * H
@@ -33,7 +33,7 @@ export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42
     ctx.fillRect(x - r, y - r, r * 2, r * 2)
   }
 
-  // żyłki — cienkie, łamane, z miękką poświatą
+  // veins — thin, jagged, with a soft glow
   const veins = Math.round(6 + (W * H) / 160000)
   for (let v = 0; v < veins; v++) {
     let x = rnd() * W
@@ -43,7 +43,7 @@ export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42
     const width = 0.4 + rnd() * 1.1
     const pts: Array<[number, number]> = [[x, y]]
     for (let s = 0; s < steps; s++) {
-      // łagodny dryf + okazjonalne załamania
+      // gentle drift + occasional kinks
       ang += (rnd() - 0.5) * 0.25 + (rnd() < 0.08 ? (rnd() - 0.5) * 1.4 : 0)
       const len = 6 + rnd() * 10
       x += Math.cos(ang) * len
@@ -64,7 +64,7 @@ export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42
     ctx.strokeStyle = `rgba(92,96,106,${0.16 + rnd() * 0.22})`
     ctx.lineWidth = width
     ctx.stroke()
-    // odgałęzienie
+    // branch
     if (pts.length > 20 && rnd() > 0.4) {
       const k0 = Math.floor(rnd() * (pts.length - 10))
       let [bx, by] = pts[k0]
@@ -83,7 +83,7 @@ export function createMarbleTexture(W: number, H: number, dpr: number, seed = 42
     }
   }
 
-  // ziarno
+  // grain
   for (let i = 0; i < (W * H) / 260; i++) {
     ctx.fillStyle = rnd() > 0.5 ? 'rgba(255,255,255,0.18)' : 'rgba(80,80,90,0.06)'
     ctx.fillRect(rnd() * W, rnd() * H, 1, 1)

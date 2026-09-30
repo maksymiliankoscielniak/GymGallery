@@ -1,5 +1,7 @@
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { useEffect } from 'react'
+import { useI18n } from '../../i18n/useI18n'
+import { LanguageSwitch } from '../common/LanguageSwitch'
 
 interface IntroOverlayProps {
   onBegin: () => void
@@ -14,14 +16,15 @@ const HEAD = 'M 180 66 A 19 19 0 1 1 179.9 66 Z'
 const ARMS = 'M 98 164 C 92 194 88 224 86 252 M 262 164 C 268 194 272 224 274 252'
 
 /**
- * Wstęp: pożółkły pergamin, na którym ołówek rysuje konstrukcję witruwiańską
- * i szkielet proporcji V-taper, a potem odręcznie wpisuje tytuł dzieła.
+ * Intro: yellowed parchment on which a pencil draws the Vitruvian construction
+ * and the V-taper skeleton, then hand-writes the title of the work.
  */
 export function IntroOverlay({ onBegin }: IntroOverlayProps) {
   const reduced = useReducedMotion()
+  const { t: tr } = useI18n()
   const k = reduced ? 0.15 : 1
 
-  // pozycja ołówka na okręgu witruwiańskim (zsynchronizowana z rysowaniem konturu)
+  // pencil position on the Vitruvian circle (in sync with the outline drawing)
   const t = useMotionValue(0)
   const px = useTransform(t, (v) => 180 + 146 * Math.sin(v * 2 * Math.PI))
   const py = useTransform(t, (v) => 180 - 146 * Math.cos(v * 2 * Math.PI))
@@ -42,6 +45,7 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, filter: 'blur(6px)', transition: { duration: 0.7 } }}
     >
+      <LanguageSwitch tone="sketch" className="absolute right-4 top-4 z-10" />
       <div className="relative flex w-full max-w-3xl flex-col items-center text-center">
         <div className="relative w-[min(78vw,360px)]">
           <svg viewBox="0 0 360 330" className="h-auto w-full" aria-hidden>
@@ -84,7 +88,7 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
             >
               latitudo humeri
             </motion.text>
-            {/* ołówek wędrujący po okręgu */}
+            {/* pencil travelling around the circle */}
             {!reduced && (
               <motion.g style={{ x: px, y: py, opacity: pencilOpacity }}>
                 <g transform="rotate(32)">
@@ -114,7 +118,7 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 3.4 * k, duration: 0.8 }}
         >
-          Artystyczny Silnik Architektury Sylwetki i&nbsp;Hipertrofii
+          {tr('intro.subtitle')}
         </motion.p>
 
         <motion.ol
@@ -123,11 +127,11 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 3.9 * k, duration: 0.8 }}
         >
-          <li><span className="text-sketch-sanguine">I.</span> Szkic</li>
+          <li><span className="text-sketch-sanguine">I.</span> {tr('intro.stage1')}</li>
           <li aria-hidden>·</li>
-          <li><span className="text-sketch-sanguine">II.</span> Płótno olejne</li>
+          <li><span className="text-sketch-sanguine">II.</span> {tr('intro.stage2')}</li>
           <li aria-hidden>·</li>
-          <li><span className="text-sketch-sanguine">III.</span> Marmurowa rzeźba</li>
+          <li><span className="text-sketch-sanguine">III.</span> {tr('intro.stage3')}</li>
         </motion.ol>
 
         <motion.button
@@ -157,7 +161,7 @@ export function IntroOverlay({ onBegin }: IntroOverlayProps) {
               vectorEffect="non-scaling-stroke"
             />
           </svg>
-          <span className="relative">Rozpocznij szkic</span>
+          <span className="relative">{tr('intro.begin')}</span>
         </motion.button>
       </div>
     </motion.div>

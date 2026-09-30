@@ -5,9 +5,9 @@ import { exerciseSets } from './sfr'
 import { setsPerDay } from './volume'
 
 /**
- * Składa tydzień treningowy: objętość partii → dni podziału → konkretne ćwiczenia.
- * Serie każdego ćwiczenia rozkładane są zachłannie tak, by w każdej sesji
- * pojawiały się oba profile oporu, a sumy tygodniowe zgadzały się co do serii.
+ * Assembles the training week: muscle volume → split days → concrete exercises.
+ * Sets of each exercise are spread greedily so that both resistance profiles
+ * show up in every session and the weekly totals match set for set.
  */
 export function buildWeekSchedule(split: SplitDay[], volume: VolumePlan, pigments: PigmentPlan): DayPlan[] {
   const perDay = setsPerDay(split, volume)
@@ -26,7 +26,7 @@ export function buildWeekSchedule(split: SplitDay[], volume: VolumePlan, pigment
         let bestScore = -Infinity
         exs.forEach((e, i) => {
           if (remaining[i] <= 0) return
-          // preferuj ćwiczenia z największą niewykorzystaną częścią i jeszcze nieobecne w tej sesji
+          // prefer exercises with the largest unused share that are not yet in this session
           const score = remaining[i] / e.sets + (taken[i] === 0 ? 0.5 : 0)
           if (score > bestScore) {
             bestScore = score
@@ -47,7 +47,7 @@ export function buildWeekSchedule(split: SplitDay[], volume: VolumePlan, pigment
     const items = byDay[day.id].sort((a, b) => {
       const ea = EXERCISE_MAP[a.exerciseId]
       const eb = EXERCISE_MAP[b.exerciseId]
-      // ćwiczenia złożone i fazy rozciągnięcia na początku sesji
+      // compound lifts and stretch phases at the start of the session
       const ka = (ea.compound ? 0 : 2) + (ea.profile === 'stretch' ? 0 : 1)
       const kb = (eb.compound ? 0 : 2) + (eb.profile === 'stretch' ? 0 : 1)
       return ka - kb

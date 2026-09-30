@@ -1,8 +1,8 @@
 import { seededRandom } from '../../lib/random'
 
 /**
- * Generuje poszarpaną ścieżkę pęknięcia wzdłuż odcinka (x1,y1)→(x2,y2)
- * z kilkoma odgałęzieniami — deterministycznie dla danego ziarna.
+ * Generates a jagged crack path along the segment (x1,y1)→(x2,y2)
+ * with a few branches — deterministic for a given seed.
  */
 export function crackPath(x1: number, y1: number, x2: number, y2: number, seed: number, severity = 1): string {
   const rnd = seededRandom(seed)

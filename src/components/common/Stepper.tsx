@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
+import { useI18n } from '../../i18n/useI18n'
 import { cn } from '../../lib/cn'
 
 interface StepperProps {
@@ -14,7 +15,7 @@ interface StepperProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-/** Licznik −/+ z pełną obsługą klawiatury (strzałki góra/dół na wartości). */
+/** −/+ counter with full keyboard support (arrow keys on the value). */
 export function Stepper({
   value,
   onChange,
@@ -27,6 +28,7 @@ export function Stepper({
   valueClassName,
   size = 'md',
 }: StepperProps) {
+  const { t } = useI18n()
   const btn = size === 'lg' ? 'h-10 w-10' : size === 'sm' ? 'h-7 w-7' : 'h-8 w-8'
   const icon = size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'
   return (
@@ -51,7 +53,7 @@ export function Stepper({
       <button
         type="button"
         tabIndex={-1}
-        aria-label={`${label}: odejmij`}
+        aria-label={t('stepper.decrease', { label })}
         disabled={value <= min}
         onClick={() => onChange(-1)}
         className={cn('flex items-center justify-center rounded-full border transition disabled:opacity-30', btn, buttonClassName)}
@@ -65,7 +67,7 @@ export function Stepper({
       <button
         type="button"
         tabIndex={-1}
-        aria-label={`${label}: dodaj`}
+        aria-label={t('stepper.increase', { label })}
         disabled={value >= max}
         onClick={() => onChange(1)}
         className={cn('flex items-center justify-center rounded-full border transition disabled:opacity-30', btn, buttonClassName)}

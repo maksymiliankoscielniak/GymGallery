@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { useI18n } from '../../i18n/useI18n'
 
 interface SealProps {
   onActivate: () => void
@@ -6,16 +7,17 @@ interface SealProps {
 }
 
 /**
- * Pieczęć sangwiną — pojawia się na pergaminie, gdy szkic jest zbilansowany.
- * Kliknięcie uruchamia przejście do Etapu II.
+ * Sanguine seal — appears on the parchment once the sketch is balanced.
+ * Clicking it starts the transition to Stage II.
  */
-export function Seal({ onActivate, label = 'Zatwierdź szkic i przejdź do płótna olejnego' }: SealProps) {
+export function Seal({ onActivate, label }: SealProps) {
   const reduced = useReducedMotion()
+  const { t } = useI18n()
   return (
     <motion.button
       type="button"
       onClick={onActivate}
-      aria-label={label}
+      aria-label={label ?? t('seal.aria')}
       className="group relative block h-36 w-36 cursor-pointer rounded-full focus-visible:outline-[#9c3d25] sm:h-40 sm:w-40"
       initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 1.9, rotate: -28 }}
       animate={{ opacity: 1, scale: 1, rotate: -8 }}
@@ -40,7 +42,7 @@ export function Seal({ onActivate, label = 'Zatwierdź szkic i przejdź do płó
           <path id="seal-ring" d="M 80 80 m -56 0 a 56 56 0 1 1 112 0 a 56 56 0 1 1 -112 0" />
         </defs>
 
-        {/* rozprysk tuszu przy odbiciu pieczęci */}
+        {/* ink splash as the seal lands */}
         {!reduced && (
           <motion.circle
             cx={80}
@@ -71,12 +73,12 @@ export function Seal({ onActivate, label = 'Zatwierdź szkic i przejdź do płó
           </text>
           <path d="M 62 72 l 3 3 l -3 3 l -3 -3 Z M 98 72 l 3 3 l -3 3 l -3 -3 Z" />
           <text x={80} y={106} textAnchor="middle" className="font-hand" fontSize={17} fontWeight={700}>
-            zatwierdź
+            {t('seal.approve')}
           </text>
         </g>
       </svg>
       <span className="pointer-events-none absolute -bottom-7 left-1/2 w-max -translate-x-1/2 font-hand text-lg text-[#9c3d25] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-        przyłóż pieczęć →
+        {t('seal.hover')}
       </span>
     </motion.button>
   )

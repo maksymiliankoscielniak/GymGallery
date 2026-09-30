@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { seededRandom } from '../../lib/random'
 
 interface PaintTransitionProps {
-  /** Ekran całkowicie zalany farbą — moment na podmianę etapu pod spodem */
+  /** The screen is completely flooded with paint — the moment to swap the stage underneath */
   onCovered: () => void
   onDone: () => void
   reduced?: boolean
@@ -31,7 +31,7 @@ interface Splat {
   drops: Array<{ a: number; d: number; r: number; v: number }>
 }
 
-/** Rodziny barw (karmazyn, kobalt, złoto, zieleń ziemi, umbra) — ciemne → jasne. */
+/** Colour families (crimson, cobalt, gold, green earth, umber) — dark → light. */
 const FAMILIES: string[][] = [
   ['#5e0a0d', '#8a0f0f', '#b3261e', '#d0543f', '#e39a86'],
   ['#0f2446', '#1d3e6b', '#2f5d9a', '#5b86c0', '#9fb8dc'],
@@ -50,8 +50,8 @@ const easeOutBack = (t: number) => {
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
 
 /**
- * Przejście I → II: organiczne chlapnięcia farby olejnej, które rozlewają się
- * w geometryczne, kubistyczne płaszczyzny barwne i zalewają ekran.
+ * Transition I → II: organic splashes of oil paint that spread out
+ * into geometric, cubist planes of colour and flood the screen.
  */
 export function PaintTransition({ onCovered, onDone, reduced = false }: PaintTransitionProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -79,7 +79,7 @@ export function PaintTransition({ onCovered, onDone, reduced = false }: PaintTra
     const speed = reduced ? 0.35 : 1
     const rnd = seededRandom((Date.now() & 0xffff) + 17)
 
-    /* --- ogniska chlapnięć: jedno zawsze w prawym dolnym rogu (tam była pieczęć) --- */
+    /* --- splash origins: one always in the bottom-right corner (where the seal was) --- */
     const origins = [
       { x: W * (0.72 + rnd() * 0.12), y: H * (0.7 + rnd() * 0.15), fam: 0 },
       { x: W * (0.12 + rnd() * 0.2), y: H * (0.18 + rnd() * 0.25), fam: 1 },
@@ -88,7 +88,7 @@ export function PaintTransition({ onCovered, onDone, reduced = false }: PaintTra
     ]
     const maxDist = Math.hypot(W, H) * 0.75
 
-    /* --- siatka kubistycznych fasetek (trójkąty z poszarpanego gridu) --- */
+    /* --- grid of cubist facets (triangles from a jittered grid) --- */
     const cell = Math.max(64, Math.min(W, H) / 7)
     const cols = Math.ceil(W / cell) + 2
     const rows = Math.ceil(H / cell) + 2

@@ -2,7 +2,7 @@ import { MUSCLE_MAP } from '../../data/muscles'
 import { volumeStatus } from '../../lib/volume'
 import type { MuscleId, PigmentHue } from '../../types'
 
-/** Trzy warstwy farby dla każdej rodziny barw: laserunek → ciało koloru → głęboka glazura. */
+/** Three paint layers for every colour family: glaze → body colour → deep glaze. */
 export const PIGMENT_LAYERS: Record<PigmentHue, [string, string, string]> = {
   crimson: ['#d9938a', '#b3261e', '#6e0c10'],
   cobalt: ['#8ea9d2', '#2f5d9a', '#132b52'],
@@ -10,15 +10,15 @@ export const PIGMENT_LAYERS: Record<PigmentHue, [string, string, string]> = {
 }
 
 export interface PaintState {
-  /** 0–3 warstwy farby */
+  /** 0–3 paint layers */
   layers: number
-  /** krycie pierwszej warstwy (partie niedotrenowane są wyblakłe) */
+  /** opacity of the first layer (under-trained muscle groups look faded) */
   wash: number
   /** 0–1 przyciemnienie (przetrenowanie) */
   darken: number
 }
 
-/** Stan „farby” partii wynikający z objętości względem MEV / MAV / MRV. */
+/** The “paint” state of a muscle group, derived from its volume relative to MEV / MAV / MRV. */
 export function paintStateFor(muscle: MuscleId, sets: number): PaintState {
   const l = MUSCLE_MAP[muscle].landmarks
   if (sets <= 0) return { layers: 0, wash: 0, darken: 0 }

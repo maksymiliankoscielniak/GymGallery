@@ -1,17 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState, type KeyboardEvent } from 'react'
-import { MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import { hashString } from '../../lib/random'
 import type { BodyView, MuscleId } from '../../types'
 import { crackPath } from './crack'
 import { CENTER_LINES, DETAIL_LINES, FACE, OUTLINE_HALF, SILHOUETTE, both, mirrorPath, shapesFor } from './geometry'
 
 interface MarblePlateProps {
-  /** Partie przekraczające MRV — pęknięcia w strukturze marmuru */
+  /** Muscle groups above MRV — cracks in the marble */
   cracked: MuscleId[]
-  /** Pęknięcie zmęczenia centralnego (wzdłuż kręgosłupa) */
+  /** Central-fatigue crack (along the spine) */
   centralCrack: boolean
-  /** Deload wykuty: pęknięcia zamieniają się w złote spoiny (kintsugi) */
+  /** Deload carved: cracks turn into golden seams (kintsugi) */
   healed: boolean
   selected: MuscleId | null
   onSelect: (m: MuscleId) => void
@@ -24,6 +24,8 @@ const FIG_Y = 18
 export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect, label }: MarblePlateProps) {
   const [hovered, setHovered] = useState<MuscleId | null>(null)
   const focus = hovered ?? selected
+  const i18n = useI18n()
+  const { t } = i18n
 
   const onKey = (e: KeyboardEvent, m: MuscleId) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -38,12 +40,12 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
     const shapes = shapesFor(view)
     return (
       <g transform={`translate(${FIG_X[view]} ${FIG_Y})`}>
-        {/* cień rzucany na cokół */}
+        {/* shadow cast onto the plinth */}
         <ellipse cx={14} cy={470} rx={46} ry={6} fill="#000" opacity={0.55} filter="url(#soft-shadow)" />
-        {/* bryła marmuru */}
+        {/* the marble body */}
         <path d={SILHOUETTE} fill="#ebe8e1" filter="url(#marble-body)" />
 
-        {/* ryte kontury mięśni */}
+        {/* engraved muscle contours */}
         <g fill="none" strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
           {shapes.map((s) => (
             <g key={`carve-${s.muscle}`}>
@@ -67,7 +69,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
           <path d={mirrorPath(OUTLINE_HALF)} stroke="#3c414c" strokeOpacity={0.5} strokeWidth={0.8} />
         </g>
 
-        {/* pęknięcia — sygnał przekroczenia MRV */}
+        {/* cracks — the signal of an MRV breach */}
         <g style={{ pointerEvents: 'none' }}>
           <AnimatePresence>
             {shapes
@@ -124,7 +126,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
         </g>
 
         {shapes.map((s) => {
-          const def = MUSCLE_MAP[s.muscle]
+          const name = i18n.muscle(s.muscle)
           return (
             <path
               key={`hit-${s.muscle}`}
@@ -134,7 +136,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
               strokeWidth={6}
               role="button"
               tabIndex={0}
-              aria-label={`${def.name}${cracked.includes(s.muscle) ? ' — pęknięcie: przekroczone MRV' : ''}`}
+              aria-label={cracked.includes(s.muscle) ? t('marble.crackAria', { name }) : name}
               aria-pressed={selected === s.muscle}
               className="cursor-pointer"
               onClick={() => onSelect(s.muscle)}
@@ -151,7 +153,6 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
           shapes
             .filter((s) => s.muscle === focus)
             .map((s) => {
-              const def = MUSCLE_MAP[s.muscle]
               const left = view === 'front'
               const [ax, ay] = s.anchor
               const x0 = left ? -ax : ax
@@ -168,7 +169,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
                     letterSpacing={1.5}
                     fill="#f3f1ec"
                   >
-                    {def.short.toUpperCase()}
+                    {i18n.muscleShort(s.muscle).toUpperCase()}
                   </text>
                   {label && (
                     <text x={xe + (left ? -4 : 4)} y={ay + 3} textAnchor={left ? 'end' : 'start'} className="font-mono" fontSize={9} fill="#aab2c0">
@@ -183,7 +184,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
   }
 
   return (
-    <svg viewBox="0 0 600 540" className="h-auto w-full select-none" role="group" aria-label="Marmurowa rzeźba sylwetki z sygnalizacją przekroczenia MRV">
+    <svg viewBox="0 0 600 540" className="h-auto w-full select-none" role="group" aria-label={t('marble.plateAria')}>
       <defs>
         <filter id="marble-body" x="-8%" y="-4%" width="116%" height="108%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur" />
@@ -227,7 +228,7 @@ export function MarblePlate({ cracked, centralCrack, healed, selected, onSelect,
 
       <rect x={0} y={0} width={600} height={540} fill="url(#spot)" />
 
-      {/* cokoły */}
+      {/* plinths */}
       {(['front', 'back'] as const).map((v) => (
         <g key={v}>
           <rect x={FIG_X[v] - 70} y={490} width={140} height={34} rx={2} fill="url(#plinth)" />

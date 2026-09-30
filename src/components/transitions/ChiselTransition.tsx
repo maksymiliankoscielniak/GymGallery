@@ -38,8 +38,8 @@ interface Chip {
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
 
 /**
- * Przejście II → III: blok marmuru wypełnia ekran, dłuto uderza trzykrotnie,
- * pęknięcia rozchodzą się promieniście, a odłamki opadają, odsłaniając rzeźbę.
+ * Transition II → III: a marble block fills the screen, the chisel strikes three times,
+ * cracks radiate outward and the shards fall away, revealing the sculpture.
  */
 export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselTransitionProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -68,7 +68,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
     const texture = createMarbleTexture(W, H, dpr, 1234)
     const impact: Pt = [W * 0.5, H * 0.46]
 
-    /* --- promienista siatka pęknięć --- */
+    /* --- radial crack network --- */
     const rays = 15
     const diag = Math.hypot(W, H)
     const radii = [0, 34, 90, 170, 290, 450, 650, 900, 1250, 1700].filter((_, i, a) => i === 0 || a[i - 1] < diag)
@@ -97,7 +97,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       }
     }
 
-    // krawędzie pęknięć: wszystkie promienie + część łuków (wygląda jak kamień, nie pajęczyna)
+    // crack edges: all the rays + some of the arcs (looks like stone, not a spider web)
     const crackEdges: Array<{ a: Pt; b: Pt; ring: number }> = []
     for (let i = 0; i < rays; i++) {
       const n = (i + 1) % rays
@@ -107,7 +107,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       }
     }
 
-    // wstępne renderowanie odłamków na własnych płótnach
+    // pre-render the shards onto their own canvases
     const shards: Shard[] = polys.map(({ pts, ring }) => {
       const xs = pts.map((p) => p[0])
       const ys = pts.map((p) => p[1])
@@ -156,7 +156,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       }
     })
 
-    /* --- oś czasu --- */
+    /* --- timeline --- */
     const T_BLOCK = 380 * k
     const STRIKES = [700, 1100, 1500].map((t) => t * k)
     const T_BREAK = 1700 * k
@@ -176,7 +176,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
     const firedBreak = { done: false }
 
     const drawTools = (t: number) => {
-      // dłuto: ostrze w punkcie uderzenia, trzonek skierowany w lewo-górę
+      // chisel: tip at the point of impact, shaft pointing up-left
       const angle = -0.62
       const SWING = 110 * k
       const RECOIL = 140 * k
@@ -206,10 +206,10 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       ctx.translate(impact[0], impact[1])
       ctx.rotate(angle)
       ctx.translate(0, -push)
-      // cień
+      // shadow
       ctx.fillStyle = 'rgba(0,0,0,0.25)'
       ctx.fillRect(4, -150, 12, 150)
-      // ostrze
+      // blade
       const steel = ctx.createLinearGradient(-8, 0, 8, 0)
       steel.addColorStop(0, '#6f7682')
       steel.addColorStop(0.45, '#e6ebf2')
@@ -223,27 +223,27 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       ctx.closePath()
       ctx.fill()
       ctx.fillRect(-6, -150, 12, 110)
-      // główka (lekko rozklepana)
+      // head (slightly mushroomed)
       ctx.fillStyle = '#8a919c'
       ctx.beginPath()
       ctx.ellipse(0, -152, 10, 5, 0, 0, Math.PI * 2)
       ctx.fill()
       ctx.restore()
 
-      // młotek (pobijak) — zamach wzdłuż osi dłuta
+      // mallet — swing along the axis of the chisel
       ctx.save()
       ctx.globalAlpha = toolsAlpha
       ctx.translate(impact[0], impact[1])
       ctx.rotate(angle)
       ctx.translate(0, -152 - 30 - lift * 70)
       ctx.rotate(-lift * 0.55)
-      // trzonek
+      // shaft
       const wood = ctx.createLinearGradient(0, -6, 0, 6)
       wood.addColorStop(0, '#9a6a3c')
       wood.addColorStop(1, '#5c3a1c')
       ctx.fillStyle = wood
       ctx.fillRect(-4, -10, 150, 9)
-      // obuch
+      // poll
       const head = ctx.createLinearGradient(-40, 0, 40, 0)
       head.addColorStop(0, '#4b5058')
       head.addColorStop(0.4, '#b8bec8')
@@ -263,7 +263,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       const t = now - start
       ctx.clearRect(0, 0, W, H)
 
-      // wstrząs po uderzeniu
+      // shake after the strike
       let shake = 0
       for (const s of STRIKES) {
         const dt = t - s
@@ -277,11 +277,11 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       if (shake > 0) ctx.translate((rnd() - 0.5) * shake * 2, (rnd() - 0.5) * shake * 2)
 
       if (t < T_BREAK) {
-        // cały blok marmuru
+        // the whole marble block
         ctx.globalAlpha = clamp01(t / T_BLOCK)
         ctx.drawImage(texture, 0, 0, W, H)
         ctx.globalAlpha = 1
-        // rysy rozchodzące się z każdym uderzeniem: promienie + fragmenty pierścieni
+        // cracks spreading with every strike: rays + ring fragments
         const struck = STRIKES.filter((s) => t >= s).length
         const reach = struck === 0 ? 0 : struck === 1 ? 2 : struck === 2 ? 4 : radii.length
         if (reach > 0) {
@@ -331,7 +331,7 @@ export function ChiselTransition({ onCovered, onDone, reduced = false }: ChiselT
       }
       ctx.restore()
 
-      // odłamki i pył
+      // shards and dust
       for (const c of chips) {
         const age = t - c.born
         if (age > c.life) continue

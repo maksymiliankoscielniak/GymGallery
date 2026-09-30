@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useState, type KeyboardEvent } from 'react'
 import { MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import type { BodyView, MuscleId, VolumePlan } from '../../types'
 import { PIGMENT_LAYERS, paintStateFor } from './paint'
 import { DETAIL_LINES, OUTLINE_HALF, SILHOUETTE, both, mirrorPath, shapesFor } from './geometry'
@@ -17,6 +18,8 @@ const FIG_Y = 24
 export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
   const [hovered, setHovered] = useState<MuscleId | null>(null)
   const focus = hovered ?? selected
+  const i18n = useI18n()
+  const { t } = i18n
 
   const onKey = (e: KeyboardEvent, m: MuscleId) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -29,11 +32,11 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
     const shapes = shapesFor(view)
     return (
       <g transform={`translate(${FIG_X[view]} ${FIG_Y})`}>
-        {/* imprimatura — ciemna podmalówka */}
+        {/* imprimatura — the dark underpainting */}
         <path d={SILHOUETTE} fill="#2d2119" filter="url(#oil-ground)" />
         <path d={SILHOUETTE} fill="url(#oil-flesh)" opacity={0.9} />
 
-        {/* warstwy farby */}
+        {/* paint layers */}
         {shapes.map((s) => {
           const def = MUSCLE_MAP[s.muscle]
           const paint = paintStateFor(s.muscle, volume[s.muscle])
@@ -52,7 +55,7 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
                   transition={{ duration: 0.7, delay: i * 0.08, ease: 'easeOut' }}
                 />
               ))}
-              {/* przyciemnienie — przetrenowane partie ciemnieją jak spalony werniks */}
+              {/* darkening — over-trained muscle groups darken like burnt varnish */}
               <motion.path
                 d={d}
                 fill="#140a06"
@@ -65,10 +68,10 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
           )
         })}
 
-        {/* światłocień: światło z lewej góry */}
+        {/* chiaroscuro: light from the upper left */}
         <path d={SILHOUETTE} fill="url(#oil-light)" style={{ pointerEvents: 'none', mixBlendMode: 'soft-light' }} />
 
-        {/* kontur umbrą i złote refleksy */}
+        {/* umber outline and golden highlights */}
         <g fill="none" strokeLinecap="round" style={{ pointerEvents: 'none' }}>
           <path d={OUTLINE_HALF} stroke="#0e0906" strokeWidth={2.2} />
           <path d={mirrorPath(OUTLINE_HALF)} stroke="#0e0906" strokeWidth={2.2} />
@@ -89,7 +92,6 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
         </g>
 
         {shapes.map((s) => {
-          const def = MUSCLE_MAP[s.muscle]
           return (
             <path
               key={`hit-${s.muscle}`}
@@ -99,7 +101,7 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
               strokeWidth={6}
               role="button"
               tabIndex={0}
-              aria-label={`${def.name}: ${volume[s.muscle]} serii — wybierz, by dobrać pigmenty`}
+              aria-label={t('oil.plateHit', { name: i18n.muscle(s.muscle), sets: volume[s.muscle] })}
               aria-pressed={selected === s.muscle}
               className="cursor-pointer"
               onClick={() => onSelect(s.muscle)}
@@ -117,7 +119,6 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
             shapes
               .filter((s) => s.muscle === focus)
               .map((s) => {
-                const def = MUSCLE_MAP[s.muscle]
                 const left = view === 'front'
                 const [ax, ay] = s.anchor
                 const x0 = left ? -ax : ax
@@ -141,7 +142,7 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
                       fontSize={13}
                       fill="#efe2c4"
                     >
-                      {def.short}
+                      {i18n.muscleShort(s.muscle)}
                     </text>
                     <text
                       x={xe + (left ? -4 : 4)}
@@ -151,7 +152,7 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
                       fontSize={10}
                       fill="#d9a441"
                     >
-                      {volume[s.muscle]} serii
+                      {t('plate.sets', { n: volume[s.muscle] })}
                     </text>
                   </motion.g>
                 )
@@ -162,7 +163,7 @@ export function OilPlate({ volume, selected, onSelect }: OilPlateProps) {
   }
 
   return (
-    <svg viewBox="0 0 600 530" className="h-auto w-full select-none" role="group" aria-label="Płótno z mapą nasycenia objętością">
+    <svg viewBox="0 0 600 530" className="h-auto w-full select-none" role="group" aria-label={t('oil.plateAria')}>
       <defs>
         <filter id="oil-ground" x="-5%" y="-5%" width="110%" height="110%">
           <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="2" result="n" />

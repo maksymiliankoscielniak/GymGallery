@@ -6,6 +6,7 @@ import { Stepper } from '../../components/common/Stepper'
 import { cn } from '../../lib/cn'
 import { DELOAD_CUT, deloadVolume, rampVolume } from '../../lib/progression'
 import { seededRandom } from '../../lib/random'
+import { useI18n } from '../../i18n/useI18n'
 import { useGallery } from '../../state/GalleryContext'
 
 function ChiselGlyph({ className }: { className?: string }) {
@@ -25,9 +26,12 @@ function ChiselGlyph({ className }: { className?: string }) {
   )
 }
 
-/** Silnik deloadu „Chisel”: wykrywa przekroczenie MRV i wykuwa tydzień regeneracyjny. */
+/** The “Chisel” deload engine: detects MRV breaches and carves a recovery week. */
 export function ChiselPanel() {
   const { state, dispatch, meso } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
+  const cutPct = Math.round(DELOAD_CUT * 100)
   const reduced = useReducedMotion()
   const [striking, setStriking] = useState(false)
   const timer = useRef<number | undefined>(undefined)
@@ -39,7 +43,7 @@ export function ChiselPanel() {
   const deloadTotal = MUSCLE_IDS.reduce((a, m) => a + deloadVol[m], 0)
   const accumulationWeeks = meso.weeks.filter((w) => !w.deload).length
 
-  // pierwszy tydzień przekroczenia MRV dla każdej pękającej partii
+  // first week above MRV for every cracking muscle group
   const firstBreach = useMemo(() => {
     const out: Array<{ muscle: (typeof MUSCLE_IDS)[number]; week: number; sets: number }> = []
     for (const m of meso.crackedMuscles) {
@@ -85,21 +89,21 @@ export function ChiselPanel() {
   return (
     <section className="slab flex flex-col p-4 sm:p-6" aria-labelledby="chisel-title">
       <h2 id="chisel-title" className="font-marble text-xl tracking-[0.12em] text-marble-white engraved">
-        Dłuto deloadu
+        {t('chisel.title')}
       </h2>
       <p className="font-body text-base italic text-marble-chisel/55">
-        Objętość rośnie co tydzień od MEV ku MRV. Gdy plan przekracza granicę regeneracji, marmur pęka.
+        {t('chisel.hint')}
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">Tygodnie akumulacji</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">{t('chisel.weeks')}</p>
           <Stepper
             value={state.meso.weeks}
             min={3}
             max={8}
             onChange={(d) => dispatch({ type: 'setMeso', meso: { weeks: state.meso.weeks + d } })}
-            label="Liczba tygodni akumulacji"
+            label={t('chisel.weeksAria')}
             size="sm"
             className="mt-1"
             buttonClassName="border-marble-chisel/20 text-marble-chisel hover:border-marble-kintsugi hover:text-marble-kintsugi"
@@ -107,8 +111,8 @@ export function ChiselPanel() {
           />
         </div>
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">Przyrost serii / tydz.</p>
-          <div className="mt-1 inline-flex overflow-hidden rounded border border-marble-chisel/20" role="radiogroup" aria-label="Przyrost serii na partię co tydzień">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">{t('chisel.ramp')}</p>
+          <div className="mt-1 inline-flex overflow-hidden rounded border border-marble-chisel/20" role="radiogroup" aria-label={t('chisel.rampAria')}>
             {[0, 1, 2, 3].map((n) => (
               <button
                 key={n}
@@ -128,7 +132,7 @@ export function ChiselPanel() {
         </div>
       </div>
 
-      {/* diagnoza */}
+      {/* diagnosis */}
       <div
         className={cn(
           'mt-5 rounded border p-3 font-body text-[15px] leading-snug',
@@ -141,36 +145,36 @@ export function ChiselPanel() {
         aria-live="polite"
       >
         {!hasCracks && !carved && (
-          <>Plan mieści się w granicach regeneracji przez {state.meso.weeks} tyg. Deload można wykuć na koniec bloku.</>
+          <>{t('chisel.ok', { weeks: state.meso.weeks })}</>
         )}
         {hasCracks && !carved && (
           <>
-            <span className="font-marble text-sm tracking-widest text-[#ff8a80]">RYSA · T{meso.breachWeek}</span>
+            <span className="font-marble text-sm tracking-widest text-[#ff8a80]">{t('chisel.crackTag', { week: i18n.weekLabel(meso.breachWeek ?? 1) })}</span>
             <ul className="mt-1 space-y-0.5">
               {firstBreach.map((b) => (
                 <li key={b.muscle}>
-                  {MUSCLE_MAP[b.muscle].name}: {b.sets} serii w T{b.week} (MRV {MUSCLE_MAP[b.muscle].landmarks.mrv})
+                  {t('chisel.breachRow', { name: i18n.muscle(b.muscle), sets: b.sets, week: i18n.weekLabel(b.week), mrv: MUSCLE_MAP[b.muscle].landmarks.mrv })}
                 </li>
               ))}
-              {meso.centralCrack && <li>Zmęczenie centralne przekracza zdolność regeneracji układu nerwowego.</li>}
+              {meso.centralCrack && <li>{t('chisel.central')}</li>}
             </ul>
           </>
         )}
         {carved && (
           <>
-            <span className="font-marble text-sm tracking-widest text-marble-kintsugi">KINTSUGI · DELOAD W T{meso.deloadWeek}</span>
+            <span className="font-marble text-sm tracking-widest text-marble-kintsugi">{t('chisel.kintsugiTag', { week: i18n.weekLabel(meso.deloadWeek ?? 1) })}</span>
             <p className="mt-1">
-              Akumulacja skrócona do {accumulationWeeks} tyg. — rysy wypełnione złotem. Tydzień regeneracyjny: −{Math.round(DELOAD_CUT * 100)}% serii, ciężar bez zmian, RIR 3–4.
+              {t('chisel.carvedNote', { weeks: accumulationWeeks, cut: cutPct })}
             </p>
           </>
         )}
       </div>
 
-      {/* blok objętości i uderzenie dłutem */}
+      {/* volume block and the chisel strike */}
       <div className="relative mt-8 select-none" aria-hidden>
         <div className="mb-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">
-          <span>Objętość tygodnia szczytowego</span>
-          <span>{carved ? `${deloadTotal} / ${peakTotal} serii` : `${peakTotal} serii`}</span>
+          <span>{t('chisel.peakVolume')}</span>
+          <span>{carved ? t('chisel.setsOf', { a: deloadTotal, b: peakTotal }) : t('chisel.setsN', { n: peakTotal })}</span>
         </div>
         <div className="relative h-12 w-full">
           <motion.div
@@ -209,7 +213,7 @@ export function ChiselPanel() {
         </div>
         <div className="mt-1 flex justify-between font-mono text-[10px] text-marble-chisel/40">
           <span>0</span>
-          <span className="text-marble-kintsugi/80">−{Math.round(DELOAD_CUT * 100)}%</span>
+          <span className="text-marble-kintsugi/80">−{cutPct}%</span>
         </div>
       </div>
 
@@ -228,7 +232,7 @@ export function ChiselPanel() {
             <ChiselGlyph className="h-9 w-3" />
             <span>
               <span className="block font-marble text-base font-semibold tracking-[0.15em]">CARVE DELOAD</span>
-              <span className="block font-body text-sm italic text-[#3a3d44]">jedno uderzenie · −40% objętości</span>
+              <span className="block font-body text-sm italic text-[#3a3d44]">{t('chisel.oneStrike', { cut: cutPct })}</span>
             </span>
           </motion.button>
         ) : (
@@ -237,7 +241,7 @@ export function ChiselPanel() {
             onClick={() => dispatch({ type: 'restoreDeload' })}
             className="flex items-center gap-2 rounded-sm border border-marble-chisel/20 px-4 py-2 font-body text-base text-marble-chisel/75 transition-colors hover:border-marble-kintsugi hover:text-marble-kintsugi"
           >
-            <Undo2 className="h-4 w-4" aria-hidden /> Cofnij dłuto
+            <Undo2 className="h-4 w-4" aria-hidden /> {t('chisel.undo')}
           </button>
         )}
       </div>

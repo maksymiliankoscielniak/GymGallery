@@ -1,10 +1,11 @@
 import { MUSCLE_IDS, MUSCLE_MAP, recordOfMuscles } from '../data/muscles'
+import type { I18n } from '../i18n/createI18n'
 import type { GalleryState, MuscleId, SplitDay, VolumePlan, VolumeStatus } from '../types'
 
 export const MAX_SETS_PER_MUSCLE = 40
-/** Powyżej tej liczby serii jednej partii w jednej sesji rośnie „śmieciowa” objętość. */
+/** Above this many sets for one muscle group in one session, “junk” volume builds up. */
 export const SESSION_MUSCLE_CAP = 10
-/** Powyżej tej liczby serii w sesji jakość pracy spada. */
+/** Above this many sets in a session, work quality drops. */
 export const SESSION_TOTAL_CAP = 26
 
 export function volumeStatus(muscle: MuscleId, sets: number): VolumeStatus {
@@ -16,19 +17,11 @@ export function volumeStatus(muscle: MuscleId, sets: number): VolumeStatus {
   return 'over'
 }
 
-export const STATUS_META: Record<VolumeStatus, { label: string; hint: string }> = {
-  under: { label: 'poniżej MEV', hint: 'bodziec zbyt słaby, by wywołać wzrost' },
-  effective: { label: 'MEV → MAV', hint: 'objętość efektywna — rośnie' },
-  optimal: { label: 'w strefie MAV', hint: 'maksymalna adaptacja' },
-  high: { label: 'ponad MAV', hint: 'zbliża się do granicy regeneracji' },
-  over: { label: 'ponad MRV', hint: 'zmęczenie przerasta regenerację' },
-}
-
 export function isBalancedStatus(s: VolumeStatus): boolean {
   return s === 'effective' || s === 'optimal'
 }
 
-/** Rozkłada serie równo na n sesji; reszta trafia do pierwszych sesji. */
+/** Spreads sets evenly over n sessions; the remainder goes to the first sessions. */
 export function distributeSets(total: number, sessions: number): number[] {
   if (sessions <= 0) return []
   const base = Math.floor(total / sessions)
@@ -40,7 +33,7 @@ export function frequencyOf(split: SplitDay[], muscle: MuscleId): number {
   return split.filter((d) => d.muscles.includes(muscle)).length
 }
 
-/** Serie danej partii w każdym dniu podziału: dayId → muscle → sets */
+/** Sets of each muscle group on every split day: dayId → muscle → sets */
 export function setsPerDay(
   split: SplitDay[],
   volume: VolumePlan,
@@ -70,14 +63,15 @@ export interface SketchAnalysis {
   perDay: Record<string, Partial<Record<MuscleId, number>>>
   sessionTotals: Record<string, number>
   weeklyTotal: number
-  /** Blokują pieczęć */
+  /** Block the seal */
   issues: PlanIssue[]
-  /** Wskazówki niekrytyczne */
+  /** Non-critical hints */
   warnings: PlanIssue[]
   balanced: boolean
 }
 
-export function analyzeSketch(state: Pick<GalleryState, 'split' | 'volume'>): SketchAnalysis {
+export function analyzeSketch(state: Pick<GalleryState, 'split' | 'volume'>, i18n: I18n): SketchAnalysis {
+  const { t } = i18n
   const { split, volume } = state
   const status = recordOfMuscles((m) => volumeStatus(m, volume[m]))
   const frequency = recordOfMuscles((m) => frequencyOf(split, m))
@@ -90,23 +84,24 @@ export function analyzeSketch(state: Pick<GalleryState, 'split' | 'volume'>): Sk
   const issues: PlanIssue[] = []
   const warnings: PlanIssue[] = []
 
-  if (split.length < 2) issues.push({ message: 'Podział potrzebuje co najmniej dwóch dni.' })
+  if (split.length < 2) issues.push({ message: t('issue.splitMin') })
 
   for (const m of MUSCLE_IDS) {
     const def = MUSCLE_MAP[m]
+    const name = i18n.muscle(m)
     const s = status[m]
     if (s === 'under') {
-      issues.push({ muscle: m, message: `${def.name}: ${volume[m]} serii — poniżej MEV (${def.landmarks.mev}).` })
+      issues.push({ muscle: m, message: t('issue.under', { name, sets: volume[m], mev: def.landmarks.mev }) })
     } else if (s === 'high' || s === 'over') {
       issues.push({
         muscle: m,
-        message: `${def.name}: ${volume[m]} serii — ponad MAV (${def.landmarks.mavHigh}). Start mezocyklu powinien zostawić zapas do MRV.`,
+        message: t('issue.high', { name, sets: volume[m], mav: def.landmarks.mavHigh }),
       })
     }
     if (volume[m] > 0 && frequency[m] === 0) {
-      issues.push({ muscle: m, message: `${def.name}: nie przypisano do żadnego dnia podziału.` })
+      issues.push({ muscle: m, message: t('issue.unassigned', { name }) })
     } else if (frequency[m] === 1 && volume[m] > 0) {
-      warnings.push({ muscle: m, message: `${def.name}: tylko 1× w tygodniu — częstotliwość 2× zwykle daje lepszy bodziec.` })
+      warnings.push({ muscle: m, message: t('warn.once', { name }) })
     }
     for (const d of split) {
       const n = perDay[d.id][m] ?? 0
@@ -114,17 +109,17 @@ export function analyzeSketch(state: Pick<GalleryState, 'split' | 'volume'>): Sk
         warnings.push({
           muscle: m,
           dayId: d.id,
-          message: `${d.name}: ${n} serii na ${def.short.toLowerCase()} w jednej sesji — ponad ~${SESSION_MUSCLE_CAP} serii rośnie objętość „śmieciowa”.`,
+          message: t('warn.junk', { day: d.name, n, muscle: i18n.muscleShort(m).toLowerCase(), cap: SESSION_MUSCLE_CAP }),
         })
       }
     }
   }
   for (const d of split) {
     if (sessionTotals[d.id] > SESSION_TOTAL_CAP) {
-      warnings.push({ dayId: d.id, message: `${d.name}: ${sessionTotals[d.id]} serii w sesji — rozważ przeniesienie partii na inny dzień.` })
+      warnings.push({ dayId: d.id, message: t('warn.session', { day: d.name, n: sessionTotals[d.id] }) })
     }
     if (d.muscles.length === 0) {
-      warnings.push({ dayId: d.id, message: `${d.name}: pusty dzień — dodaj partie lub usuń go z podziału.` })
+      warnings.push({ dayId: d.id, message: t('warn.emptyDay', { day: d.name }) })
     }
   }
 
@@ -140,7 +135,7 @@ export function analyzeSketch(state: Pick<GalleryState, 'split' | 'volume'>): Sk
   }
 }
 
-/** Rozkład „intensywności” 0–1 względem MRV — pomocny przy cieniowaniu. */
+/** “Intensity” 0–1 relative to MRV — handy for shading. */
 export function volumeIntensity(muscle: MuscleId, sets: number): number {
   const l = MUSCLE_MAP[muscle].landmarks
   return Math.max(0, Math.min(1.25, sets / l.mrv))

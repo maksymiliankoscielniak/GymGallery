@@ -1,5 +1,6 @@
 import { useId, useState, type PointerEvent } from 'react'
 import { useElementWidth } from '../../hooks/useElementWidth'
+import { useI18n } from '../../i18n/useI18n'
 import { CHART_INK, niceTicks } from './chartUtils'
 
 export interface LineSeries {
@@ -13,16 +14,17 @@ interface LineChartProps {
   labels: string[]
   series: LineSeries[]
   format: (v: number) => string
-  /** Indeksy kolumn wyróżnionych (np. tydzień deloadu) */
+  /** Indexes of highlighted columns (e.g. the deload week) */
   shaded?: number[]
   shadedLabel?: string
   height?: number
   ariaLabel: string
 }
 
-/** Wykres liniowy z celownikiem, podpowiedzią dla wszystkich serii i etykietami bezpośrednimi. */
+/** Line chart with a crosshair, a tooltip for every series and direct labels. */
 export function LineChart({ labels, series, format, shaded = [], shadedLabel, height = 230, ariaLabel }: LineChartProps) {
-  // etykiety bezpośrednie tylko przy wielu seriach — pojedynczą nazywa tytuł wykresu
+  // direct labels only for multiple series — a single one is named by the chart title
+  const { t } = useI18n()
   const direct = series.length > 1
   const M = { top: 14, right: direct ? 104 : 16, bottom: 26, left: 48 }
   const [ref, width] = useElementWidth<HTMLDivElement>()
@@ -44,7 +46,7 @@ export function LineChart({ labels, series, format, shaded = [], shadedLabel, he
   const yAt = (v: number) => M.top + innerH - ((v - y0) / (y1 - y0 || 1)) * innerH
   const step = n > 1 ? innerW / (n - 1) : innerW
 
-  // etykiety bezpośrednie — rozsuwamy, by się nie nakładały
+  // direct labels — nudged apart so they do not overlap
   const ends = series
     .map((s) => ({ s, y: yAt(s.values[s.values.length - 1]) }))
     .sort((a, b) => a.y - b.y)
@@ -62,7 +64,7 @@ export function LineChart({ labels, series, format, shaded = [], shadedLabel, he
   return (
     <div ref={ref} className="relative w-full">
       {series.length > 1 && (
-        <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Legenda">
+        <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label={t('chart.legend')}>
           {series.map((s) => (
             <li key={s.id} className="flex items-center gap-1.5" style={{ color: CHART_INK.secondary }}>
               <span className="inline-block h-[2px] w-4 rounded" style={{ background: s.color }} aria-hidden />

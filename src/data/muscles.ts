@@ -1,15 +1,15 @@
 import type { MuscleDef, MuscleId } from '../types'
 
 /**
- * Punkty orientacyjne objętości (serie robocze tygodniowo) dla średniozaawansowanego
- * trenującego — oparte na powszechnie stosowanych widełkach MEV / MAV / MRV
- * (m.in. wytyczne Renaissance Periodization). To punkt wyjścia, nie dogmat.
+ * Volume landmarks (working sets per week) for an intermediate lifter — based on the
+ * widely used MEV / MAV / MRV ranges (e.g. Renaissance Periodization guidelines).
+ * A starting point, not dogma. Names are English; Polish ones live in i18n/messages.pl.ts.
  */
 export const MUSCLES: MuscleDef[] = [
   {
     id: 'shoulders',
-    name: 'Barki',
-    short: 'Barki',
+    name: 'Shoulders',
+    short: 'Shoulders',
     latin: 'Deltoideus',
     views: ['front', 'back'],
     hue: 'gold',
@@ -18,8 +18,8 @@ export const MUSCLES: MuscleDef[] = [
   },
   {
     id: 'chest',
-    name: 'Klatka piersiowa',
-    short: 'Klatka',
+    name: 'Chest',
+    short: 'Chest',
     latin: 'Pectoralis major',
     views: ['front'],
     hue: 'crimson',
@@ -27,8 +27,8 @@ export const MUSCLES: MuscleDef[] = [
   },
   {
     id: 'lats',
-    name: 'Najszerszy grzbietu',
-    short: 'Najszerszy',
+    name: 'Lats',
+    short: 'Lats',
     latin: 'Latissimus dorsi',
     views: ['back'],
     hue: 'cobalt',
@@ -55,8 +55,8 @@ export const MUSCLES: MuscleDef[] = [
   },
   {
     id: 'abs',
-    name: 'Brzuch',
-    short: 'Brzuch',
+    name: 'Abs',
+    short: 'Abs',
     latin: 'Rectus abdominis',
     views: ['front'],
     hue: 'gold',
@@ -65,8 +65,8 @@ export const MUSCLES: MuscleDef[] = [
   },
   {
     id: 'quads',
-    name: 'Czworogłowe uda',
-    short: 'Czworogłowe',
+    name: 'Quadriceps',
+    short: 'Quads',
     latin: 'Quadriceps femoris',
     views: ['front'],
     hue: 'crimson',
@@ -74,8 +74,8 @@ export const MUSCLES: MuscleDef[] = [
   },
   {
     id: 'hamstrings',
-    name: 'Tył uda',
-    short: 'Tył uda',
+    name: 'Hamstrings',
+    short: 'Hamstrings',
     latin: 'Biceps femoris',
     views: ['back'],
     hue: 'cobalt',
@@ -89,7 +89,7 @@ export const MUSCLE_MAP: Record<MuscleId, MuscleDef> = Object.fromEntries(
   MUSCLES.map((m) => [m.id, m]),
 ) as Record<MuscleId, MuscleDef>
 
-/** Pomocnik: rekord z wartością dla każdej partii. */
+/** Helper: a record with one value per muscle group. */
 export function recordOfMuscles<T>(factory: (id: MuscleId) => T): Record<MuscleId, T> {
   return Object.fromEntries(MUSCLE_IDS.map((id) => [id, factory(id)])) as Record<MuscleId, T>
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MarblePlate } from '../../components/anatomy/MarblePlate'
 import { StageHeading } from '../../components/common/StageHeading'
 import { MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import { useGallery } from '../../state/GalleryContext'
 import type { MuscleId } from '../../types'
 import { ChiselPanel } from './ChiselPanel'
@@ -12,6 +13,8 @@ import { VTaperPanel } from './VTaperPanel'
 
 export function MarbleStage() {
   const { state, meso } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
   const [selected, setSelected] = useState<MuscleId | null>(null)
   const healed = Boolean(state.deload)
   const peakWeek = meso.weeks.filter((w) => !w.deload).at(-1)
@@ -24,13 +27,12 @@ export function MarbleStage() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
-      <StageHeading stage="marble" numeral="III" title="Marmurowa rzeźba" subtitle="The Sculpture — proporcje V-taper i dłuto deloadu">
-        Surowa forma w chłodnym świetle. Oceń proporcje sylwetki, prześledź progresję ciężarów i tonażu, a gdy plan przekroczy
-        maksymalną objętość regeneracyjną — wykuj tydzień deloadu jednym uderzeniem dłuta.
+      <StageHeading stage="marble" numeral="III" title={t('marble.title')} subtitle={t('marble.subtitle')}>
+        {t('marble.intro')}
       </StageHeading>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <section className="slab overflow-hidden p-2 sm:p-4" aria-label="Rzeźba">
+        <section className="slab overflow-hidden p-2 sm:p-4" aria-label={t('marble.section')}>
           <MarblePlate
             cracked={meso.crackedMuscles}
             centralCrack={meso.centralCrack}
@@ -41,10 +43,13 @@ export function MarbleStage() {
           />
           <p className="px-2 pb-1 text-center font-body text-sm italic text-marble-chisel/50">
             {meso.crackedMuscles.length === 0 && !meso.centralCrack
-              ? 'Bryła bez rys — plan mieści się w granicach regeneracji.'
+              ? t('marble.intact')
               : healed
-                ? 'Złote spoiny kintsugi: rysy zaleczone tygodniem regeneracyjnym.'
-                : `Rysy: ${meso.crackedMuscles.map((m) => MUSCLE_MAP[m].short).join(', ')}${meso.centralCrack ? ' + zmęczenie centralne' : ''}.`}
+                ? t('marble.healed')
+                : t('marble.cracks', {
+                    list: meso.crackedMuscles.map((m) => i18n.muscleShort(m)).join(', '),
+                    central: meso.centralCrack ? t('marble.centralSuffix') : '',
+                  })}
           </p>
         </section>
         <ChiselPanel />

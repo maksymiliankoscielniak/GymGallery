@@ -1,14 +1,14 @@
 import type { BodyView, MuscleId } from '../../types'
 
 /* ------------------------------------------------------------------
- *  Geometria sylwetki — płyta anatomiczna w stylu szkiców Leonarda.
- *  Rysujemy prawą połowę ciała (x ≥ 0); lewa powstaje przez odbicie lustrzane.
- *  Układ lokalny: x ∈ [-80, 80], y ∈ [0, 472].
+ *  Body geometry — an anatomical plate in the style of Leonardo's sketches.
+ *  Only the right half of the body is drawn (x ≥ 0); the left is produced by mirroring.
+ *  Local coordinates: x ∈ [-80, 80], y ∈ [0, 472].
  * ------------------------------------------------------------------ */
 
 export const FIGURE_BOX = { x: -80, y: 0, w: 160, h: 472 }
 
-/** Odbija ścieżkę SVG (tylko komendy absolutne M L C Q Z) względem osi x = 0. */
+/** Mirrors an SVG path (absolute commands M L C Q Z only) across the x = 0 axis. */
 export function mirrorPath(d: string): string {
   const tokens = d.match(/[MLCQZ]|-?\d*\.?\d+/gi) ?? []
   const out: string[] = []
@@ -26,10 +26,10 @@ export function mirrorPath(d: string): string {
   return out.join(' ')
 }
 
-/** Pełna ścieżka: prawa połowa + lustrzane odbicie. */
+/** Full path: right half + mirror image. */
 export const both = (d: string) => `${d} ${mirrorPath(d)}`
 
-/** Kontur prawej połowy ciała (otwarty — do rysowania kreską). */
+/** Outline of the right half of the body (open — for line drawing). */
 export const OUTLINE_HALF =
   'M 0 8 C 12 8 19 18 19 32 C 19 44 15 54 9 59 L 11 74 Q 28 78 44 84 C 58 84 68 94 68 110 ' +
   'C 68 122 66 130 64 136 C 67 152 69 170 66 190 C 71 206 72 232 68 258 ' +
@@ -40,17 +40,17 @@ export const OUTLINE_HALF =
   'C 32 460 30 466 22 466 L 14 466 C 12 462 13 456 15 452 ' +
   'C 14 430 12 405 15 384 C 16 374 14 368 13 362 C 10 340 8 320 4 300 L 0 298'
 
-/** Zamknięta sylwetka (do wypełnień). */
+/** Closed silhouette (for fills). */
 export const SILHOUETTE = both(`${OUTLINE_HALF} Z`)
 
 export interface MuscleShape {
   muscle: MuscleId
   view: BodyView
-  /** Ścieżka prawej połowy */
+  /** Path of the right half */
   d: string
-  /** Punkt kotwiczenia etykiety (prawa połowa) */
+  /** Label anchor point (right half) */
   anchor: [number, number]
-  /** Odcinek, wzdłuż którego biegnie pęknięcie marmuru */
+  /** Segment along which the marble crack runs */
   crack: [number, number, number, number]
 }
 
@@ -65,7 +65,7 @@ const ABS =
   'M 19 154 C 27 154 34 162 36 178 C 36 196 34 212 33 226 C 29 238 24 246 19 252 C 18 232 18 200 18 174 Z'
 
 export const MUSCLE_SHAPES: MuscleShape[] = [
-  /* ----- przód ----- */
+  /* ----- front ----- */
   { muscle: 'shoulders', view: 'front', d: DELTOID, anchor: [58, 104], crack: [44, 92, 62, 128] },
   {
     muscle: 'chest',
@@ -89,7 +89,7 @@ export const MUSCLE_SHAPES: MuscleShape[] = [
     anchor: [28, 312],
     crack: [36, 276, 20, 352],
   },
-  /* ----- tył ----- */
+  /* ----- back ----- */
   { muscle: 'shoulders', view: 'back', d: DELTOID, anchor: [58, 104], crack: [44, 92, 62, 128] },
   {
     muscle: 'lats',
@@ -118,53 +118,53 @@ export function shapesFor(view: BodyView): MuscleShape[] {
   return MUSCLE_SHAPES.filter((s) => s.view === view)
 }
 
-/** Detale anatomiczne (nieklikalne) — linie kreski, rysowane obustronnie. */
+/** Anatomical details (not clickable) — hatch lines, drawn on both sides. */
 export const DETAIL_LINES: Record<BodyView, string[]> = {
   front: [
-    // obojczyk
+    // collarbone
     'M 4 84 C 16 80 28 82 38 86',
-    // zębaty przedni
+    // serratus anterior
     'M 36 146 L 41 150 M 35 156 L 40 160 M 34 166 L 38 170',
-    // pas Adonisa
+    // Adonis belt
     'M 22 246 C 18 262 12 276 6 290',
-    // mięsień prosty uda / przyśrodkowy
+    // rectus femoris / vastus medialis
     'M 27 282 C 30 305 30 330 27 352',
     'M 14 330 C 22 336 24 350 19 357',
-    // rzepka
+    // kneecap
     'M 21 362 C 21 356 31 356 31 362 C 31 370 21 372 21 362',
-    // piszczel / łydka
+    // shin / calf
     'M 31 380 C 34 400 32 424 26 446',
-    // przedramię
+    // forearm
     'M 55 200 C 60 218 62 236 61 254',
   ],
   back: [
-    // czworoboczny
+    // trapezius
     'M 2 64 C 8 68 22 76 40 86 C 34 94 24 104 16 118 C 10 130 5 142 2 152',
-    // łopatka
+    // shoulder blade
     'M 12 100 C 22 98 30 104 32 116 C 28 124 20 128 12 126',
-    // prostowniki grzbietu
+    // erector spinae
     'M 5 236 C 7 250 8 262 6 280',
-    // pośladki
+    // glutes
     'M 3 262 C 14 256 34 258 44 270 C 48 284 44 298 30 304 C 20 306 10 304 3 300',
-    // łydka
+    // calf
     'M 16 374 C 24 366 36 370 40 388 C 41 402 35 414 28 420 C 22 414 16 402 15 388',
     'M 27 372 L 27 410',
-    // przedramię
+    // forearm
     'M 56 200 C 62 218 64 236 62 254',
   ],
 }
 
-/** Linia kręgosłupa i mostka (rysowana raz, bez odbicia). */
+/** Spine and sternum line (drawn once, not mirrored). */
 export const CENTER_LINES: Record<BodyView, string> = {
   front: 'M 0 90 L 0 148',
   back: 'M 0 76 L 0 292',
 }
 
-/** Rysy twarzy (przód) / linia włosów (tył) — bez odbicia. */
+/** Facial features (front) / hairline (back) — not mirrored. */
 export const FACE: Record<BodyView, string> = {
   front: 'M -10 29 Q -6 26 -2 29 M 10 29 Q 6 26 2 29 M 0 33 L -2 43 L 1 44 M -4 50 Q 0 52 4 50',
   back: 'M -15 22 C -8 13 8 13 15 22 M -12 30 C -6 26 6 26 12 30',
 }
 
-/** Kolejność rysowania w animacji ołówka. */
+/** Drawing order in the pencil animation. */
 export const DRAW_ORDER: MuscleId[] = ['shoulders', 'chest', 'lats', 'biceps', 'triceps', 'abs', 'quads', 'hamstrings']

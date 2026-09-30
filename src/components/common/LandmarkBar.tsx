@@ -7,7 +7,7 @@ interface LandmarkBarProps {
   muscle: MuscleId
   sets: number
   tone: StageId
-  /** Opcjonalny drugi znacznik (np. szczyt mezocyklu) */
+  /** Optional second marker (e.g. the mesocycle peak) */
   peak?: number
   showLabels?: boolean
   className?: string
@@ -37,7 +37,7 @@ const LABEL: Record<StageId, string> = {
   marble: 'text-marble-chisel/50 font-mono',
 }
 
-/** Pasek z granicami MEV / MAV / MRV i znacznikiem aktualnej objętości. */
+/** Bar with the MEV / MAV / MRV boundaries and a marker for the current volume. */
 export function LandmarkBar({ muscle, sets, tone, peak, showLabels = true, className }: LandmarkBarProps) {
   const l = MUSCLE_MAP[muscle].landmarks
   const max = l.mrv + 6

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState, type KeyboardEvent } from 'react'
 import { MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import type { BodyView, MuscleId, VolumePlan, VolumeStatus } from '../../types'
 import {
   CENTER_LINES,
@@ -19,7 +20,7 @@ interface SketchPlateProps {
   status: Record<MuscleId, VolumeStatus>
   selected: MuscleId | null
   onSelect: (m: MuscleId) => void
-  /** Odtwórz animację rysowania ołówkiem */
+  /** Play the pencil drawing animation */
   drawIn: boolean
 }
 
@@ -66,6 +67,8 @@ function HatchPatterns() {
 export function SketchPlate({ volume, status, selected, onSelect, drawIn }: SketchPlateProps) {
   const [hovered, setHovered] = useState<MuscleId | null>(null)
   const focus = hovered ?? selected
+  const i18n = useI18n()
+  const { t } = i18n
 
   const draw = (delay: number, duration = 1.4) =>
     drawIn
@@ -95,10 +98,10 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
     const shapes = shapesFor(view)
     return (
       <g transform={`translate(${FIG_X[view]} ${FIG_Y})`}>
-        {/* podmalówka sylwetki */}
+        {/* underpainting of the silhouette */}
         <motion.path d={SILHOUETTE} fill="#f3e9cf" fillOpacity={0.55} {...fade(0.6)} />
 
-        {/* cieniowanie kreskowaniem wg objętości */}
+        {/* hatch shading according to volume */}
         {shapes.map((s) => {
           const sets = volume[s.muscle]
           const level = HATCH_LEVEL[status[s.muscle]]
@@ -115,7 +118,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
         })}
 
         <g filter="url(#graphite)">
-          {/* kontur */}
+          {/* outline */}
           <motion.path d={OUTLINE_HALF} fill="none" stroke={GRAPHITE} strokeWidth={1.35} strokeLinecap="round" {...draw(0.25, 2)} />
           <motion.path
             d={mirrorPath(OUTLINE_HALF)}
@@ -125,7 +128,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
             strokeLinecap="round"
             {...draw(0.25, 2)}
           />
-          {/* detale anatomiczne */}
+          {/* anatomical details */}
           {DETAIL_LINES[view].map((d, i) => (
             <motion.path
               key={`det-${i}`}
@@ -139,7 +142,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
           ))}
           <motion.path d={CENTER_LINES[view]} stroke="#6b5a45" strokeWidth={0.7} {...draw(1.5, 0.8)} />
           <motion.path d={FACE[view]} fill="none" stroke="#6b5a45" strokeWidth={0.7} strokeLinecap="round" {...draw(1.9, 0.8)} />
-          {/* kontury mięśni */}
+          {/* muscle contours */}
           {shapes.map((s) => (
             <motion.path
               key={`line-${s.muscle}`}
@@ -154,9 +157,8 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
           ))}
         </g>
 
-        {/* strefy klikalne */}
+        {/* clickable zones */}
         {shapes.map((s) => {
-          const def = MUSCLE_MAP[s.muscle]
           return (
             <path
               key={`hit-${s.muscle}`}
@@ -166,7 +168,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
               strokeWidth={6}
               role="button"
               tabIndex={0}
-              aria-label={`${def.name}: ${volume[s.muscle]} serii tygodniowo`}
+              aria-label={t('sketch.plateHit', { name: i18n.muscle(s.muscle), sets: volume[s.muscle] })}
               aria-pressed={selected === s.muscle}
               className="cursor-pointer"
               onClick={() => onSelect(s.muscle)}
@@ -179,7 +181,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
           )
         })}
 
-        {/* adnotacja ręczna dla wskazanej partii */}
+        {/* hand-written annotation for the focused muscle group */}
         {focus &&
           shapes
             .filter((s) => s.muscle === focus)
@@ -217,7 +219,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
                     fontSize={13}
                     fill={GRAPHITE}
                   >
-                    {volume[s.muscle]} serii
+                    {t('plate.sets', { n: volume[s.muscle] })}
                   </text>
                 </g>
               )
@@ -231,7 +233,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
       viewBox="0 0 600 530"
       className="h-auto w-full select-none"
       role="group"
-      aria-label="Interaktywna płyta anatomiczna — kliknij partię mięśniową, aby przydzielić serie"
+      aria-label={t('sketch.plateAria')}
     >
       <defs>
         <filter id="graphite" x="-5%" y="-5%" width="110%" height="110%">
@@ -241,14 +243,14 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
         <HatchPatterns />
       </defs>
 
-      {/* konstrukcja witruwiańska */}
+      {/* Vitruvian construction */}
       <g stroke="#8f7d62" fill="none" strokeWidth={0.6} opacity={0.55}>
         <motion.circle cx={300} cy={262} r={236} {...draw(0, 2.4)} />
         <motion.rect x={64} y={30} width={472} height={466} {...draw(0.2, 2.4)} />
         <motion.path d="M 300 20 L 300 392 M 40 262 L 560 262" strokeDasharray="3 5" {...draw(0.4, 1.8)} />
       </g>
 
-      {/* podziałka proporcji: głowy */}
+      {/* proportion scale: head units */}
       <motion.g {...fade(1)} fill="#6b5a45" className="font-sketch" fontSize={8}>
         {Array.from({ length: 9 }, (_, i) => {
           const y = FIG_Y + 8 + i * 57.2
@@ -266,7 +268,7 @@ export function SketchPlate({ volume, status, selected, onSelect, drawIn }: Sket
         <line x1={25} x2={25} y1={FIG_Y + 8} y2={FIG_Y + 8 + 8 * 57.2} stroke="#6b5a45" strokeWidth={0.6} />
       </motion.g>
 
-      {/* notatki lustrzanym pismem — hołd dla Leonarda */}
+      {/* mirror-writing notes — a nod to Leonardo */}
       <motion.g {...fade(1.4)} className="font-hand" fill="#6b5a45" opacity={0.55}>
         <text transform="translate(300 420) scale(-1 1)" fontSize={13} textAnchor="middle">
           la proporzione

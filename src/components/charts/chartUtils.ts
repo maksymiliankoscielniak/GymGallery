@@ -1,4 +1,4 @@
-/** Kategoryczna paleta wykresów na ciemnej płycie (zwalidowana pod CVD i kontrast ≥ 3:1). */
+/** Categorical chart palette for the dark slab (validated for CVD and contrast ≥ 3:1). */
 export const SERIES_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500'] as const
 
 export const CHART_INK = {
@@ -10,7 +10,7 @@ export const CHART_INK = {
   surface: '#15171c',
 }
 
-/** „Ładne” podziałki osi Y. */
+/** “Nice” Y-axis ticks. */
 export function niceTicks(min: number, max: number, count = 4): number[] {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [0]
   if (min === max) {

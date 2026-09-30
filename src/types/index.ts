@@ -1,8 +1,8 @@
 /* ------------------------------------------------------------------
- *  Gym Gallery — typy domenowe
+ *  Gym Gallery — domain types
  * ------------------------------------------------------------------ */
 
-/** Partie mięśniowe modelowane w silniku. */
+/** Muscle groups modelled by the engine. */
 export type MuscleId =
   | 'shoulders'
   | 'chest'
@@ -13,31 +13,31 @@ export type MuscleId =
   | 'quads'
   | 'hamstrings'
 
-/** Trzy etapy procesu twórczego. */
+/** The three stages of the creative process. */
 export type StageId = 'sketch' | 'oil' | 'marble'
 
-/** Rodzaj animowanego przejścia pomiędzy etapami. */
+/** Kind of animated transition between stages. */
 export type TransitionKind = 'paint' | 'chisel'
 
-/** Profil krzywej oporu ćwiczenia („pigment”). */
+/** Resistance-curve profile of an exercise (a “pigment”). */
 export type ResistanceProfile = 'stretch' | 'peak'
 
-/** Rodzina barw, którą partia maluje się na płótnie. */
+/** Colour family in which a muscle group is painted on the canvas. */
 export type PigmentHue = 'crimson' | 'cobalt' | 'gold'
 
 export type BodyView = 'front' | 'back'
 
-/** Punkty orientacyjne objętości (serie robocze / tydzień). */
+/** Volume landmarks (working sets / week). */
 export interface VolumeLandmarks {
-  /** MV — objętość podtrzymująca */
+  /** MV — maintenance volume */
   mv: number
-  /** MEV — minimalna objętość efektywna */
+  /** MEV — minimum effective volume */
   mev: number
-  /** Dolna granica MAV — maksymalnej objętości adaptacyjnej */
+  /** Lower bound of MAV — maximum adaptive volume */
   mavLow: number
-  /** Górna granica MAV */
+  /** Upper bound of MAV */
   mavHigh: number
-  /** MRV — maksymalna objętość regeneracyjna */
+  /** MRV — maximum recoverable volume */
   mrv: number
 }
 
@@ -51,14 +51,14 @@ export interface MuscleDef {
   views: BodyView[]
   hue: PigmentHue
   landmarks: VolumeLandmarks
-  /** Rola w estetyce V-taper: poszerzanie obręczy barkowej lub talia. */
+  /** Role in the V-taper aesthetic: widening the shoulder girdle, or the waist. */
   vTaperRole?: 'width' | 'waist'
 }
 
 export interface LiftBaseline {
-  /** Ciężar roboczy w kg */
+  /** Working weight in kg */
   weight: number
-  /** Powtórzenia w serii */
+  /** Repetitions per set */
   reps: number
 }
 
@@ -67,11 +67,11 @@ export interface ExerciseDef {
   name: string
   muscle: MuscleId
   profile: ResistanceProfile
-  /** Czysty bodziec hipertroficzny, 1–10 */
+  /** Pure hypertrophic stimulus, 1–10 */
   stimulus: number
-  /** Koszt stawowy / tkanek łącznych, 0–10 */
+  /** Joint / connective-tissue cost, 0–10 */
   jointFatigue: number
-  /** Koszt osiowy (kręgosłup, układ nerwowy), 0–10 */
+  /** Axial cost (spine, nervous system), 0–10 */
   axialFatigue: number
   compound: boolean
   baseline: LiftBaseline
@@ -81,14 +81,15 @@ export interface ExerciseDef {
 export interface SplitDay {
   id: string
   name: string
-  focus: string
+  /** Session theme; `null` means "use the localized default for this day". */
+  focus: string | null
   muscles: MuscleId[]
 }
 
-/** Pigment nałożony na partię — ćwiczenie z „grubością warstwy” (udziałem w objętości). */
+/** A pigment applied to a muscle group — an exercise with a “layer thickness” (its share of the volume). */
 export interface PigmentStroke {
   exerciseId: string
-  /** 1–3: względny udział w tygodniowej objętości partii */
+  /** 1–3: relative share of the muscle group's weekly volume */
   layers: number
 }
 
@@ -96,16 +97,16 @@ export type VolumePlan = Record<MuscleId, number>
 export type PigmentPlan = Record<MuscleId, PigmentStroke[]>
 
 export interface Measurements {
-  /** Obwód obręczy barkowej (cm) */
+  /** Shoulder-girdle circumference (cm) */
   shoulders: number
-  /** Obwód talii (cm) */
+  /** Waist circumference (cm) */
   waist: number
 }
 
 export interface MesocycleSettings {
   /** Liczba tygodni akumulacji */
   weeks: number
-  /** Dodatkowe serie na partię w każdym kolejnym tygodniu */
+  /** Extra sets per muscle group in every following week */
   rampSets: number
 }
 
@@ -126,7 +127,7 @@ export interface GalleryState {
   deload: DeloadRecord | null
 }
 
-/* ---------- wyniki obliczeń ---------- */
+/* ---------- computed results ---------- */
 
 export interface ScheduledExercise {
   exerciseId: string
@@ -141,15 +142,15 @@ export interface DayPlan {
 }
 
 export interface MesoWeek {
-  /** 1…n; tydzień deloadu ma flagę `deload` */
+  /** 1…n; the deload week carries the `deload` flag */
   index: number
   label: string
   deload: boolean
   volume: VolumePlan
-  /** Partie, które w tym tygodniu przekraczają MRV */
+  /** Muscle groups that exceed MRV this week */
   overMrv: MuscleId[]
   tonnage: number
-  /** Zmęczenie centralne względem systemowego MRV (1 = 100%) */
+  /** Central fatigue relative to the systemic MRV (1 = 100%) */
   centralFatigue: number
   e1rm: Record<string, number>
 }

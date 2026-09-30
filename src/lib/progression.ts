@@ -1,19 +1,20 @@
 import { EXERCISE_MAP } from '../data/exercises'
 import { MUSCLE_IDS, MUSCLE_MAP, recordOfMuscles } from '../data/muscles'
+import type { I18n } from '../i18n/createI18n'
 import type { GalleryState, MesoWeek, MuscleId, VolumePlan } from '../types'
 import { exerciseSets, fatigueCost } from './sfr'
 
-/** Wzór Brzyckiego: e1RM = ciężar × 36 / (37 − powtórzenia) */
+/** Brzycki formula: e1RM = weight × 36 / (37 − reps) */
 export function brzycki(weight: number, reps: number): number {
   const r = Math.max(1, Math.min(30, reps))
   return (weight * 36) / (37 - r)
 }
 
-/** Tygodniowy przyrost ciężaru roboczego przy stałych powtórzeniach (spadające RIR). */
+/** Weekly growth of the working load at constant reps (falling RIR). */
 export const LOAD_PROGRESSION = { compound: 0.025, isolation: 0.015 }
-/** Deload: odcięcie 40% objętości. */
+/** Deload: cut 40% of the volume. */
 export const DELOAD_CUT = 0.4
-/** Zdolność regeneracji centralnej jako ułamek sumy lokalnych MRV. */
+/** Central recovery capacity as a fraction of the summed local MRVs. */
 export const CENTRAL_CAPACITY = 0.9
 
 export function rampVolume(base: VolumePlan, rampSets: number, week: number): VolumePlan {
@@ -30,7 +31,7 @@ export function loadForWeek(exerciseId: string, baseWeight: number, week: number
   return baseWeight * Math.pow(1 + rate, week - 1)
 }
 
-/** Wybiera do 4 kluczowych bojów (po jednym dla partii budujących sylwetkę). */
+/** Picks up to 4 key lifts (one per physique-defining muscle group). */
 export function pickKeyLifts(state: Pick<GalleryState, 'pigments'>): string[] {
   const order: MuscleId[] = ['chest', 'lats', 'quads', 'hamstrings', 'shoulders']
   const out: string[] = []
@@ -54,13 +55,13 @@ function systemicCapacity(avgCost: Record<MuscleId, number>): number {
 
 export interface Mesocycle {
   weeks: MesoWeek[]
-  /** Pierwszy tydzień, w którym plan (bez deloadu) przekracza MRV lub zdolność centralną */
+  /** First week in which the plan (without a deload) exceeds MRV or central capacity */
   breachWeek: number | null
-  /** Partie pękające w planie bez deloadu */
+  /** Muscle groups that crack in the plan without a deload */
   crackedMuscles: MuscleId[]
-  /** Czy pęka zmęczenie centralne */
+  /** Whether central fatigue cracks */
   centralCrack: boolean
-  /** Numer tygodnia deloadu (gdy wykuty) */
+  /** Deload week number (once carved) */
   deloadWeek: number | null
   keyLifts: string[]
   peakVolume: VolumePlan
@@ -74,6 +75,7 @@ function computeWeek(
   deload: boolean,
   keyLifts: string[],
   capacity: number,
+  i18n: I18n,
 ): MesoWeek {
   const sets = exerciseSets(volume, state.pigments)
   let tonnage = 0
@@ -93,7 +95,7 @@ function computeWeek(
   const overMrv = MUSCLE_IDS.filter((m) => volume[m] > MUSCLE_MAP[m].landmarks.mrv)
   return {
     index,
-    label: deload ? 'D' : `T${index}`,
+    label: deload ? i18n.t('week.deload') : i18n.weekLabel(index),
     deload,
     volume,
     overMrv: deload ? [] : overMrv,
@@ -103,7 +105,7 @@ function computeWeek(
   }
 }
 
-export function buildMesocycle(state: GalleryState): Mesocycle {
+export function buildMesocycle(state: GalleryState, i18n: I18n): Mesocycle {
   const keyLifts = pickKeyLifts(state)
   const avgCost = recordOfMuscles((m) => {
     const strokes = state.pigments[m].filter((s) => EXERCISE_MAP[s.exerciseId])
@@ -113,10 +115,10 @@ export function buildMesocycle(state: GalleryState): Mesocycle {
   const capacity = systemicCapacity(avgCost)
   const n = Math.max(1, state.meso.weeks)
 
-  // Plan „surowy” — bez deloadu — służy wykrywaniu pęknięć.
+  // The “raw” plan — without a deload — is used to detect cracks.
   const raw: MesoWeek[] = []
   for (let w = 1; w <= n; w++) {
-    raw.push(computeWeek(state, w, rampVolume(state.volume, state.meso.rampSets, w), w, false, keyLifts, capacity))
+    raw.push(computeWeek(state, w, rampVolume(state.volume, state.meso.rampSets, w), w, false, keyLifts, capacity, i18n))
   }
   const breach = raw.find((w) => w.overMrv.length > 0 || w.centralFatigue > 1)
   const breachWeek = breach ? breach.index : null
@@ -140,13 +142,13 @@ export function buildMesocycle(state: GalleryState): Mesocycle {
     }
   }
 
-  // Deload wykuty: akumulacja kończy się tydzień przed pęknięciem (lub po pełnym bloku).
+  // Deload carved: accumulation ends one week before the crack (or after the full block).
   const accumulation = breachWeek ? Math.max(1, breachWeek - 1) : n
   const weeks = raw.slice(0, accumulation)
   const peak = weeks[weeks.length - 1]
   const dVol = deloadVolume(peak.volume)
   const deloadWeek = accumulation + 1
-  weeks.push(computeWeek(state, deloadWeek, dVol, accumulation, true, keyLifts, capacity))
+  weeks.push(computeWeek(state, deloadWeek, dVol, accumulation, true, keyLifts, capacity, i18n))
   return {
     weeks,
     breachWeek,

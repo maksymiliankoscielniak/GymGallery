@@ -1,17 +1,20 @@
 import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 import { Stepper } from '../../components/common/Stepper'
+import { useI18n } from '../../i18n/useI18n'
 import { cn } from '../../lib/cn'
 import { GOLDEN_RATIO, analyzeVTaper } from '../../lib/vtaper'
 import { useGallery } from '../../state/GalleryContext'
 
-/** Kalkulator proporcji V-taper — obręcz barkowa względem talii. */
+/** V-taper proportion calculator — shoulder girdle relative to the waist. */
 export function VTaperPanel() {
   const { state, dispatch, meso } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
   const { measurements } = state
-  const v = useMemo(() => analyzeVTaper(measurements, meso.weeks), [measurements, meso.weeks])
+  const v = useMemo(() => analyzeVTaper(measurements, meso.weeks, i18n), [measurements, meso.weeks, i18n])
 
-  // geometria diagramu: szerokości proporcjonalne do obwodów
+  // diagram geometry: widths proportional to the circumferences
   const widest = Math.max(v.targetShoulders, measurements.shoulders, v.projections[3].shoulders)
   const scale = Math.min(1.35, 270 / widest)
   const shW = measurements.shoulders * scale
@@ -24,14 +27,14 @@ export function VTaperPanel() {
   return (
     <section className="slab p-4 sm:p-6" aria-labelledby="vtaper-title">
       <h2 id="vtaper-title" className="font-marble text-xl tracking-[0.12em] text-marble-white engraved">
-        Wskaźnik V-Taper
+        {t('vt.title')}
       </h2>
       <p className="font-body text-base italic text-marble-chisel/55">
-        Obręcz barkowa i skrzydła najszerszego względem talii — klasyczny kanon φ ≈ {GOLDEN_RATIO}.
+        {t('vt.hint', { ratio: GOLDEN_RATIO })}
       </p>
 
       <div className="mt-4 grid grid-cols-1 items-center gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <svg viewBox="0 0 300 250" className="w-full" role="img" aria-label={`Proporcja barki do talii ${v.ratio.toFixed(2)}, cel ${GOLDEN_RATIO}`}>
+        <svg viewBox="0 0 300 250" className="w-full" role="img" aria-label={t('vt.aria', { ratio: v.ratio.toFixed(2), target: GOLDEN_RATIO })}>
           <defs>
             <linearGradient id="vt-marble" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stopColor="#f3f1ec" />
@@ -39,17 +42,17 @@ export function VTaperPanel() {
               <stop offset="1" stopColor="#8d8a84" />
             </linearGradient>
           </defs>
-          {/* cel: złota proporcja */}
+          {/* target: the golden ratio */}
           <line x1={cx - goldW / 2} x2={cx + goldW / 2} y1={40} y2={40} stroke="#d4a843" strokeDasharray="4 4" strokeWidth={1.2} />
           <text x={cx} y={30} textAnchor="middle" className="font-mono" fontSize={10} fill="#d4a843">
             φ {v.targetShoulders.toFixed(0)} cm
           </text>
-          {/* projekcja po 12 miesiącach */}
+          {/* projection after 12 months */}
           <line x1={cx - projW / 2} x2={cx + projW / 2} y1={52} y2={52} stroke="#8fa2c0" strokeWidth={1.2} />
           <text x={cx + projW / 2 + 4} y={55} className="font-mono" fontSize={8} fill="#8fa2c0">
-            12 mies.
+            {t('vt.months12')}
           </text>
-          {/* tors */}
+          {/* torso */}
           <motion.path
             initial={false}
             animate={{
@@ -67,7 +70,7 @@ export function VTaperPanel() {
             {measurements.waist} cm
           </text>
           <text x={cx} y={238} textAnchor="middle" className="font-marble" fontSize={10} letterSpacing={2} fill="#aab2c0">
-            BARKI : TALIA
+            {t('vt.diagram')}
           </text>
         </svg>
 
@@ -75,35 +78,36 @@ export function VTaperPanel() {
           <p className="font-marble text-6xl leading-none text-marble-white tabular engraved">{v.ratio.toFixed(2)}</p>
           <p className="mt-1 font-body text-lg text-marble-chisel/70">
             {v.ratio >= GOLDEN_RATIO ? (
-              <span className="text-marble-kintsugi">Kanon osiągnięty.</span>
+              <span className="text-marble-kintsugi">{t('vt.reached')}</span>
             ) : (
               <>
-                do φ brakuje <span className="font-mono text-marble-white">{gap} cm</span> obwodu barków
+                {t('vt.gapPre') && <>{t('vt.gapPre')} </>}
+                <span className="font-mono text-marble-white">{gap} cm</span> {t('vt.gapPost')}
               </>
             )}
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">Barki (cm)</span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">{t('vt.shoulders')}</span>
               <Stepper
                 value={measurements.shoulders}
                 min={60}
                 max={180}
                 onChange={(d) => dispatch({ type: 'setMeasurements', measurements: { shoulders: measurements.shoulders + d } })}
-                label="Obwód barków w centymetrach"
+                label={t('vt.shouldersAria')}
                 size="sm"
                 buttonClassName="border-marble-chisel/20 text-marble-chisel hover:border-marble-kintsugi hover:text-marble-kintsugi"
                 valueClassName="font-mono text-lg text-marble-white"
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">Talia (cm)</span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/50">{t('vt.waist')}</span>
               <Stepper
                 value={measurements.waist}
                 min={50}
                 max={160}
                 onChange={(d) => dispatch({ type: 'setMeasurements', measurements: { waist: measurements.waist + d } })}
-                label="Obwód talii w centymetrach"
+                label={t('vt.waistAria')}
                 size="sm"
                 buttonClassName="border-marble-chisel/20 text-marble-chisel hover:border-marble-kintsugi hover:text-marble-kintsugi"
                 valueClassName="font-mono text-lg text-marble-white"
@@ -125,32 +129,31 @@ export function VTaperPanel() {
 
       <dl className="mt-5 grid grid-cols-1 gap-3 font-body text-[15px] text-marble-chisel/75 sm:grid-cols-3">
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">Udział szerokości w planie</dt>
+          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">{t('vt.widthShare')}</dt>
           <dd>
-            <span className="font-mono text-marble-white">{(v.widthShare * 100).toFixed(0)}%</span> serii to barki + najszerszy
+            <span className="font-mono text-marble-white">{(v.widthShare * 100).toFixed(0)}%</span> {t('vt.widthShareSuffix')}
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">Jakość bodźca szerokości</dt>
+          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">{t('vt.stimulus')}</dt>
           <dd>
-            <span className="font-mono text-marble-white">{(v.stimulusIndex * 100).toFixed(0)}%</span> · barki{' '}
-            {v.perMuscle.shoulders.avgSets.toFixed(0)} / najszerszy {v.perMuscle.lats.avgSets.toFixed(0)} serii śr.
+            <span className="font-mono text-marble-white">{(v.stimulusIndex * 100).toFixed(0)}%</span> ·{' '}
+            {t('vt.stimulusDetail', { a: v.perMuscle.shoulders.avgSets.toFixed(0), b: v.perMuscle.lats.avgSets.toFixed(0) })}
           </dd>
         </div>
         <div>
-          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">Szacunek do kanonu</dt>
+          <dt className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">{t('vt.estimate')}</dt>
           <dd>
             {v.monthsToGolden === 0
-              ? 'osiągnięty'
+              ? t('vt.est.reached')
               : v.monthsToGolden
-                ? `ok. ${v.monthsToGolden} mies. przy stałej talii`
-                : 'ponad 6 lat — kluczowa będzie talia'}
+                ? t('vt.est.months', { n: v.monthsToGolden })
+                : t('vt.est.far')}
           </dd>
         </div>
       </dl>
       <p className="mt-4 font-body text-sm italic text-marble-chisel/45">
-        Model szacunkowy: przyrost obwodu barków zależy od średniej objętości bocznych aktonów i najszerszego względem MEV–MAV,
-        z malejącymi zwrotami. Talia zależy przede wszystkim od bilansu energetycznego — seria brzuszków jej nie „wyrzeźbi”.
+        {t('vt.note')}
       </p>
     </section>
   )

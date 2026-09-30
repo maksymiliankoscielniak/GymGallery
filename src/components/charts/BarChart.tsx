@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { useElementWidth } from '../../hooks/useElementWidth'
+import { useI18n } from '../../i18n/useI18n'
 import { CHART_INK, niceTicks } from './chartUtils'
 
 export type BarMark = 'normal' | 'deload' | 'breach'
@@ -16,8 +17,9 @@ interface BarChartProps {
 
 const M = { top: 20, right: 12, bottom: 26, left: 52 }
 
-/** Wykres słupkowy z podpowiedzią dla każdego słupka; deload kreskowany, przekroczenie MRV oznaczone ikoną. */
+/** Bar chart with a tooltip for every bar; deload hatched, MRV breach marked with an icon. */
 export function BarChart({ labels, values, marks = [], color, format, height = 210, ariaLabel }: BarChartProps) {
+  const { t } = useI18n()
   const [ref, width] = useElementWidth<HTMLDivElement>()
   const [hover, setHover] = useState<number | null>(null)
   const uid = useId().replace(/:/g, '')
@@ -80,7 +82,7 @@ export function BarChart({ labels, values, marks = [], color, format, height = 2
                 height={innerH}
                 fill="transparent"
                 tabIndex={0}
-                aria-label={`${labels[i]}: ${format(v)}${mark === 'deload' ? ' (deload)' : mark === 'breach' ? ' (przekroczone MRV)' : ''}`}
+                aria-label={`${labels[i]}: ${format(v)}${mark === 'deload' ? ` (${t('chart.deload')})` : mark === 'breach' ? ` (${t('chart.breach')})` : ''}`}
                 onPointerEnter={() => setHover(i)}
                 onPointerLeave={() => setHover(null)}
                 onFocus={() => setHover(i)}
@@ -103,8 +105,8 @@ export function BarChart({ labels, values, marks = [], color, format, height = 2
           </p>
           <p style={{ color: CHART_INK.secondary }}>
             {labels[hover]}
-            {marks[hover] === 'deload' && ' · deload'}
-            {marks[hover] === 'breach' && ' · przekroczone MRV'}
+            {marks[hover] === 'deload' && ` · ${t('chart.deload')}`}
+            {marks[hover] === 'breach' && ` · ${t('chart.breach')}`}
           </p>
         </div>
       )}

@@ -1,11 +1,12 @@
 import { EXERCISE_MAP, exercisesFor } from '../data/exercises'
-import { MUSCLE_IDS, MUSCLE_MAP, recordOfMuscles } from '../data/muscles'
+import { MUSCLE_IDS, recordOfMuscles } from '../data/muscles'
+import type { I18n } from '../i18n/createI18n'
 import type { ExerciseDef, GalleryState, MuscleId, PigmentPlan, VolumePlan } from '../types'
 import { isBalancedStatus, volumeStatus, type PlanIssue } from './volume'
 
 /* ------------------------------------------------------------------
  *  SFR — Stimulus-to-Fatigue Ratio
- *  koszt zmęczenia = 2 (koszt bazowy serii) + 0.45 × stawowy + 0.6 × osiowy
+ *  fatigue cost = 2 (base cost of a set) + 0.45 × joint + 0.6 × axial
  * ------------------------------------------------------------------ */
 
 export function fatigueCost(ex: ExerciseDef): number {
@@ -16,11 +17,11 @@ export function exerciseSfr(ex: ExerciseDef): number {
   return ex.stimulus / fatigueCost(ex)
 }
 
-/** Tygodniowy budżet obciążenia osiowego (Σ serie × koszt osiowy). */
+/** Weekly axial-load budget (Σ sets × axial cost). */
 export const AXIAL_BUDGET = 100
-/** Tygodniowy budżet obciążenia stawowego (Σ serie × koszt stawowy). */
+/** Weekly joint-load budget (Σ sets × joint cost). */
 export const JOINT_BUDGET = 300
-/** Minimalny globalny SFR wymagany do przejścia dalej. */
+/** Minimum global SFR required to move on. */
 export const SFR_TARGET = 1.8
 
 export type SfrGrade = 'costly' | 'balanced' | 'efficient'
@@ -31,13 +32,7 @@ export function sfrGrade(sfr: number): SfrGrade {
   return 'costly'
 }
 
-export const SFR_GRADE_LABEL: Record<SfrGrade, string> = {
-  costly: 'kosztowny',
-  balanced: 'zrównoważony',
-  efficient: 'wydajny',
-}
-
-/** Podział liczby całkowitej proporcjonalnie do wag (metoda największej reszty). */
+/** Splits an integer proportionally to weights (largest-remainder method). */
 export function allocateByWeights(total: number, weights: number[]): number[] {
   const sum = weights.reduce((a, b) => a + b, 0)
   if (sum <= 0 || weights.length === 0) return weights.map(() => 0)
@@ -60,7 +55,7 @@ export interface ExerciseSets {
   sets: number
 }
 
-/** Tygodniowe serie każdego ćwiczenia wynikające z objętości partii i grubości warstw. */
+/** Weekly sets of each exercise derived from the muscle volume and layer thickness. */
 export function exerciseSets(volume: VolumePlan, pigments: PigmentPlan): Record<MuscleId, ExerciseSets[]> {
   return recordOfMuscles((m) => {
     const strokes = pigments[m].filter((p) => EXERCISE_MAP[p.exerciseId])
@@ -94,7 +89,8 @@ export interface CanvasAnalysis {
   balanced: boolean
 }
 
-export function analyzeCanvas(state: Pick<GalleryState, 'volume' | 'pigments'>): CanvasAnalysis {
+export function analyzeCanvas(state: Pick<GalleryState, 'volume' | 'pigments'>, i18n: I18n): CanvasAnalysis {
+  const { t } = i18n
   const sets = exerciseSets(state.volume, state.pigments)
   let stim = 0
   let fat = 0
@@ -143,23 +139,20 @@ export function analyzeCanvas(state: Pick<GalleryState, 'volume' | 'pigments'>):
   })
 
   for (const m of MUSCLE_IDS) {
-    const def = MUSCLE_MAP[m]
+    const name = i18n.muscle(m)
     const pm = perMuscle[m]
     if (!pm.hasStretch && !pm.hasPeak) {
-      issues.push({ muscle: m, message: `${def.name}: brak pigmentów — dobierz ćwiczenia.` })
+      issues.push({ muscle: m, message: t('canvas.noPigments', { name }) })
     } else if (!pm.hasStretch) {
-      issues.push({ muscle: m, message: `${def.name}: brakuje pigmentu fazy rozciągnięcia.` })
+      issues.push({ muscle: m, message: t('canvas.noStretch', { name }) })
     } else if (!pm.hasPeak) {
-      issues.push({ muscle: m, message: `${def.name}: brakuje pigmentu oporu szczytowego.` })
+      issues.push({ muscle: m, message: t('canvas.noPeak', { name }) })
     }
     const st = volumeStatus(m, state.volume[m])
     if (!isBalancedStatus(st)) {
       issues.push({
         muscle: m,
-        message:
-          st === 'under'
-            ? `${def.name}: płótno wyblakłe — objętość poniżej MEV.`
-            : `${def.name}: farba ciemnieje — objętość ponad MAV.`,
+        message: st === 'under' ? t('canvas.faded', { name }) : t('canvas.darkening', { name }),
       })
     }
   }
@@ -167,14 +160,14 @@ export function analyzeCanvas(state: Pick<GalleryState, 'volume' | 'pigments'>):
   const globalSfr = fat > 0 ? stim / fat : 0
   if (globalSfr < SFR_TARGET) {
     issues.push({
-      message: `Globalny SFR ${globalSfr.toFixed(2)} — poniżej ${SFR_TARGET.toFixed(1)}. Zamień część ciężkich ćwiczeń złożonych na warianty o niższym koszcie.`,
+      message: t('canvas.sfrLow', { sfr: globalSfr.toFixed(2), target: SFR_TARGET.toFixed(1) }),
     })
   }
   if (axial > AXIAL_BUDGET) {
-    issues.push({ message: `Obciążenie osiowe ${Math.round(axial)} / ${AXIAL_BUDGET} — kręgosłup i układ nerwowy nie nadążą z regeneracją.` })
+    issues.push({ message: t('canvas.axialOver', { value: Math.round(axial), budget: AXIAL_BUDGET }) })
   }
   if (joint > JOINT_BUDGET) {
-    issues.push({ message: `Obciążenie stawowe ${Math.round(joint)} / ${JOINT_BUDGET} — zbyt wiele ćwiczeń drażniących stawy.` })
+    issues.push({ message: t('canvas.jointOver', { value: Math.round(joint), budget: JOINT_BUDGET }) })
   }
 
   return {
@@ -190,7 +183,7 @@ export function analyzeCanvas(state: Pick<GalleryState, 'volume' | 'pigments'>):
   }
 }
 
-/** Uzupełnia brakujące profile najwydajniejszym (najwyższy SFR) pigmentem. */
+/** Fills missing profiles with the most efficient (highest SFR) pigment. */
 export function autoCompose(pigments: PigmentPlan): PigmentPlan {
   return recordOfMuscles((m) => {
     const strokes = [...pigments[m]]

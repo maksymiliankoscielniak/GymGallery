@@ -12,7 +12,7 @@ export type GalleryAction =
   | { type: 'toggleDayMuscle'; dayId: string; muscle: MuscleId }
   | { type: 'renameDay'; dayId: string; name: string }
   | { type: 'setDayFocus'; dayId: string; focus: string }
-  | { type: 'addDay' }
+  | { type: 'addDay'; name: string }
   | { type: 'removeDay'; dayId: string }
   | { type: 'resetTemplate' }
   | { type: 'addPigment'; muscle: MuscleId; exerciseId: string }
@@ -31,7 +31,7 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 let dayCounter = 0
 const newDayId = () => `d-${Date.now().toString(36)}-${(dayCounter++).toString(36)}`
 
-/** Każda zmiana planu unieważnia wcześniej wykuty deload. */
+/** Any change to the plan invalidates a previously carved deload. */
 const invalidateDeload = (s: GalleryState): GalleryState => (s.deload ? { ...s, deload: null } : s)
 
 export function galleryReducer(state: GalleryState, action: GalleryAction): GalleryState {
@@ -88,7 +88,7 @@ export function galleryReducer(state: GalleryState, action: GalleryAction): Gall
       if (state.split.length >= 7) return state
       return invalidateDeload({
         ...state,
-        split: [...state.split, { id: newDayId(), name: `Dzień ${state.split.length + 1}`, focus: 'Nowa karta szkicownika', muscles: [] }],
+        split: [...state.split, { id: newDayId(), name: action.name.slice(0, 24), focus: null, muscles: [] }],
       })
 
     case 'removeDay':

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { EXERCISE_MAP } from '../../data/exercises'
-import { MUSCLE_MAP } from '../../data/muscles'
+import { useI18n } from '../../i18n/useI18n'
 import { BarChart, type BarMark } from '../../components/charts/BarChart'
 import { LineChart } from '../../components/charts/LineChart'
 import { SERIES_COLORS } from '../../components/charts/chartUtils'
@@ -29,9 +29,11 @@ function NumberField({ value, onChange, label, step = 1, min = 0, max = 999 }: {
   )
 }
 
-/** Analityka progresji: e1RM (Brzycki) kluczowych bojów i tonaż tygodniowy. */
+/** Progression analytics: e1RM (Brzycki) of the key lifts and weekly tonnage. */
 export function ProgressionPanel() {
   const { state, dispatch, meso } = useGallery()
+  const i18n = useI18n()
+  const { t } = i18n
   const { weeks, keyLifts } = meso
   const labels = weeks.map((w) => w.label)
 
@@ -39,11 +41,11 @@ export function ProgressionPanel() {
     () =>
       keyLifts.map((id, i) => ({
         id,
-        name: MUSCLE_MAP[EXERCISE_MAP[id].muscle].short,
+        name: i18n.muscleShort(EXERCISE_MAP[id].muscle),
         color: SERIES_COLORS[i % SERIES_COLORS.length],
         values: weeks.map((w) => w.e1rm[id]),
       })),
-    [keyLifts, weeks],
+    [keyLifts, weeks, i18n],
   )
 
   const marks: BarMark[] = weeks.map((w) => (w.deload ? 'deload' : w.overMrv.length > 0 || w.centralFatigue > 1 ? 'breach' : 'normal'))
@@ -55,13 +57,13 @@ export function ProgressionPanel() {
   return (
     <section className="slab p-4 sm:p-6" aria-labelledby="progress-title">
       <h2 id="progress-title" className="font-marble text-xl tracking-[0.12em] text-marble-white engraved">
-        Analityka progresji
+        {t('prog.title')}
       </h2>
       <p className="font-body text-base italic text-marble-chisel/55">
-        e1RM ze wzoru Brzyckiego (ciężar × 36 / (37 − powt.)) przy tygodniowym wzroście obciążenia 2,5% w ćwiczeniach złożonych i 1,5% w izolowanych.
+        {t('prog.hint')}
       </p>
 
-      <h3 className="mt-5 font-marble text-xs tracking-[0.25em] text-marble-chisel/60">SZACOWANY CIĘŻAR MAKSYMALNY · e1RM</h3>
+      <h3 className="mt-5 font-marble text-xs tracking-[0.25em] text-marble-chisel/60">{t('prog.e1rmHeading')}</h3>
       <div className="mt-2 grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         {series.map((s) => {
           const firstV = s.values[0]
@@ -69,9 +71,9 @@ export function ProgressionPanel() {
           return (
             <figure key={s.id} className="min-w-0">
               <figcaption className="flex items-baseline justify-between gap-2">
-                <span className="min-w-0 truncate font-body text-[15px] text-marble-chisel/85" title={EXERCISE_MAP[s.id].name}>
+                <span className="min-w-0 truncate font-body text-[15px] text-marble-chisel/85" title={i18n.exercise(s.id)}>
                   <span className="mr-1.5 inline-block h-[2px] w-3 align-middle" style={{ background: s.color }} aria-hidden />
-                  {s.name} <span className="text-marble-chisel/45">· {EXERCISE_MAP[s.id].name}</span>
+                  {s.name} <span className="text-marble-chisel/45">· {i18n.exercise(s.id)}</span>
                 </span>
                 <span className="shrink-0 font-mono text-xs text-marble-white tabular">
                   {Math.round(firstV)}→{Math.round(peakV)} kg <span className="text-marble-chisel/55">+{(((peakV - firstV) / firstV) * 100).toFixed(0)}%</span>
@@ -83,7 +85,7 @@ export function ProgressionPanel() {
                 format={kg}
                 height={130}
                 shaded={deloadIdx >= 0 ? [deloadIdx] : []}
-                ariaLabel={`e1RM — ${EXERCISE_MAP[s.id].name}: od ${Math.round(firstV)} do ${Math.round(peakV)} kg`}
+                ariaLabel={t('prog.e1rmAria', { name: i18n.exercise(s.id), a: Math.round(firstV), b: Math.round(peakV) })}
               />
             </figure>
           )
@@ -91,7 +93,7 @@ export function ProgressionPanel() {
       </div>
 
       <h3 className="mt-6 font-marble text-xs tracking-[0.25em] text-marble-chisel/60">
-        TONAŻ TYGODNIOWY · <span className="text-marble-chisel/80">{tonnageGain >= 0 ? '+' : ''}{tonnageGain.toFixed(0)}% do szczytu</span>
+        {t('prog.tonnage')} · <span className="text-marble-chisel/80">{t('prog.tonnageGain', { pct: `${tonnageGain >= 0 ? '+' : ''}${tonnageGain.toFixed(0)}` })}</span>
       </h3>
       <div className="mt-2">
         <BarChart
@@ -100,21 +102,21 @@ export function ProgressionPanel() {
           marks={marks}
           color="#8fa2c0"
           format={tons}
-          ariaLabel="Tonaż tygodniowy w kolejnych tygodniach mezocyklu"
+          ariaLabel={t('prog.tonnageAria')}
         />
       </div>
 
       <details className="group mt-5 rounded border border-marble-chisel/10 bg-black/20 p-3">
         <summary className="cursor-pointer font-body text-base text-marble-chisel/75 marker:text-marble-kintsugi">
-          Ciężary bazowe kluczowych bojów (tydzień 1)
+          {t('prog.baseWeights')}
         </summary>
         <table className="mt-3 w-full text-left text-sm">
           <thead className="font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">
             <tr>
-              <th className="pb-2 font-normal">Bój</th>
-              <th className="pb-2 text-right font-normal">kg</th>
-              <th className="pb-2 text-right font-normal">powt.</th>
-              <th className="pb-2 text-right font-normal">e1RM</th>
+              <th className="pb-2 font-normal">{t('prog.colLift')}</th>
+              <th className="pb-2 text-right font-normal">{t('prog.colKg')}</th>
+              <th className="pb-2 text-right font-normal">{t('prog.colReps')}</th>
+              <th className="pb-2 text-right font-normal">{t('prog.colE1rm')}</th>
             </tr>
           </thead>
           <tbody>
@@ -122,12 +124,12 @@ export function ProgressionPanel() {
               const lift = state.lifts[id] ?? EXERCISE_MAP[id].baseline
               return (
                 <tr key={id} className="border-t border-marble-chisel/8">
-                  <td className="py-1.5 pr-2 font-body text-[15px] text-marble-chisel/85">{EXERCISE_MAP[id].name}</td>
+                  <td className="py-1.5 pr-2 font-body text-[15px] text-marble-chisel/85">{i18n.exercise(id)}</td>
                   <td className="py-1.5 text-right">
-                    <NumberField value={lift.weight} step={0.5} max={500} label={`${EXERCISE_MAP[id].name} — ciężar`} onChange={(v) => dispatch({ type: 'setLift', exerciseId: id, lift: { weight: v } })} />
+                    <NumberField value={lift.weight} step={0.5} max={500} label={t('prog.weightAria', { name: i18n.exercise(id) })} onChange={(v) => dispatch({ type: 'setLift', exerciseId: id, lift: { weight: v } })} />
                   </td>
                   <td className="py-1.5 text-right">
-                    <NumberField value={lift.reps} min={1} max={30} label={`${EXERCISE_MAP[id].name} — powtórzenia`} onChange={(v) => dispatch({ type: 'setLift', exerciseId: id, lift: { reps: v } })} />
+                    <NumberField value={lift.reps} min={1} max={30} label={t('prog.repsAria', { name: i18n.exercise(id) })} onChange={(v) => dispatch({ type: 'setLift', exerciseId: id, lift: { reps: v } })} />
                   </td>
                   <td className="py-1.5 text-right font-mono text-marble-white tabular">{kg(brzycki(lift.weight, lift.reps))}</td>
                 </tr>
@@ -136,16 +138,16 @@ export function ProgressionPanel() {
           </tbody>
         </table>
         <table className="mt-4 w-full text-left text-xs">
-          <caption className="mb-1 text-left font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">Dane wykresów</caption>
+          <caption className="mb-1 text-left font-mono text-[10px] uppercase tracking-wider text-marble-chisel/45">{t('prog.chartData')}</caption>
           <thead className="font-mono text-marble-chisel/45">
             <tr>
-              <th className="font-normal">Tydzień</th>
+              <th className="font-normal">{t('prog.colWeek')}</th>
               {series.map((s) => (
                 <th key={s.id} className="text-right font-normal">
                   {s.name}
                 </th>
               ))}
-              <th className="text-right font-normal">Tonaż</th>
+              <th className="text-right font-normal">{t('prog.colTonnage')}</th>
             </tr>
           </thead>
           <tbody className="font-mono text-marble-chisel/80">

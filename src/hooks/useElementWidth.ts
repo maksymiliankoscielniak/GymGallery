@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-/** Szerokość elementu śledzona przez ResizeObserver (do responsywnych wykresów SVG). */
+/** Element width tracked by a ResizeObserver (for responsive SVG charts). */
 export function useElementWidth<T extends HTMLElement>(fallback = 600) {
   const ref = useRef<T>(null)
   const [width, setWidth] = useState(fallback)

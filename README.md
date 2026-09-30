@@ -8,7 +8,8 @@ process: parchment sketch → oil canvas → marble sculpture.
 A backend-free SPA: all state (split, volume, pigments, lifts, measurements, deload) is saved to the browser's
 `localStorage` under the key `gym-gallery/state/v1`.
 
-> The interface is currently in Polish; an additional language is planned.
+The interface is available in **English** (default) and **Polish**. Switch with the EN | PL toggle in the header (also on
+the intro screen); the choice is remembered in `localStorage` under `gym-gallery/lang`.
 
 ## Getting started
 
@@ -55,13 +56,23 @@ src/
     progression.ts       Brzycki, volume ramp, MRV detection, deload −40%
     vtaper.ts            shoulder:waist ratio and projection
   state/                 reducer, localStorage validation, context with derived analyses
+  i18n/                  EN/PL dictionaries (messages.en.ts is the source of keys), language provider and hook
   components/
     anatomy/             body geometry + variants: sketch, oil, marble
     transitions/         pencil intro, paint transition, chisel transition
     charts/              lightweight SVG charts with tooltips
-    common/              seal, "provenance" navigation, steppers, landmark bars
+    common/              seal, "provenance" navigation, language switch, steppers, landmark bars
   stages/                sketch/ · oil/ · marble/
 ```
+
+## Adding or changing translations
+
+- Every UI string is a key in `src/i18n/messages.en.ts`; `src/i18n/messages.pl.ts` must define the same keys (TypeScript
+  enforces this). Placeholders use `{name}` syntax, e.g. `t('issue.under', { name, sets, mev })`.
+- Muscle-group and exercise names are English in `src/data`; their Polish names live in `messages.pl.ts`
+  (`plMuscles`, `plExercises`).
+- To add a language: extend `Lang` and `LANGS` in `src/i18n/createI18n.ts`, add a dictionary with the same keys and
+  register it in `createI18n`.
 
 ## Model assumptions
 

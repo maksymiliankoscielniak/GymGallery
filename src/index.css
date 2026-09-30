@@ -2,7 +2,7 @@
 @config "../tailwind.config.js";
 
 /* ==================================================================
- *  Gym Gallery — tekstury i warstwa materiałowa
+ *  Gym Gallery — textures and the material layer
  * ================================================================== */
 
 :root {
@@ -73,7 +73,7 @@ body {
   border-bottom: 1px solid #9c3d25;
 }
 
-/* ---------- Etap II: płótno olejne ---------- */
+/* ---------- Stage II: oil canvas ---------- */
 .tex-oil {
   background-color: #16110e;
   background-image:
@@ -117,7 +117,7 @@ body {
     inset 0 0 60px rgba(0, 0, 0, 0.85);
 }
 
-/* ---------- Etap III: marmur i chiaroscuro ---------- */
+/* ---------- Stage III: marble and chiaroscuro ---------- */
 .tex-marble-hall {
   background-color: #0b0c10;
   background-image:
@@ -149,7 +149,7 @@ body {
     0 -1px 0 rgba(0, 0, 0, 0.8);
 }
 
-/* ---------- wspólne ---------- */
+/* ---------- shared ---------- */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -170,7 +170,7 @@ svg [role='button']:focus-visible {
   outline: none;
 }
 
-/* ---------- druk planu deloadu ---------- */
+/* ---------- printing the deload plan ---------- */
 @media print {
   body {
     background: #fff !important;

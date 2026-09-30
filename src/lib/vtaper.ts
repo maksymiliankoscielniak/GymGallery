@@ -1,11 +1,12 @@
 import { MUSCLE_IDS, MUSCLE_MAP } from '../data/muscles'
+import type { I18n } from '../i18n/createI18n'
 import type { Measurements, MesoWeek, MuscleId } from '../types'
 
-/** Złota proporcja — klasyczny „indeks Adonisa” barki : talia. */
+/** Golden ratio — the classic “Adonis index” shoulders : waist. */
 export const GOLDEN_RATIO = 1.618
-/** Maksymalny miesięczny przyrost obwodu barków (cm) przy optymalnym bodźcu. */
+/** Maximum monthly gain in shoulder circumference (cm) with an optimal stimulus. */
 export const MAX_MONTHLY_GAIN = 0.6
-/** Malejące przyrosty z miesiąca na miesiąc. */
+/** Diminishing gains from month to month. */
 export const DIMINISHING = 0.93
 
 export interface VTaperProjection {
@@ -17,9 +18,9 @@ export interface VTaperProjection {
 
 export interface VTaperAnalysis {
   ratio: number
-  /** Udział serii na barki + najszerszy w całym planie */
+  /** Share of sets going to shoulders + lats in the whole plan */
   widthShare: number
-  /** 0–1: jakość bodźca na mięśnie „szerokości” */
+  /** 0–1: stimulus quality for the “width” muscles */
   stimulusIndex: number
   perMuscle: Record<'shoulders' | 'lats', { avgSets: number; factor: number }>
   monthlyGain: number
@@ -32,7 +33,7 @@ function factorFor(muscle: MuscleId, avgSets: number): number {
   const l = MUSCLE_MAP[muscle].landmarks
   let f = (avgSets - l.mev) / (l.mavHigh - l.mev)
   f = Math.max(0, Math.min(1, f))
-  if (avgSets > l.mrv) f *= 0.6 // przetrenowanie zjada adaptację
+  if (avgSets > l.mrv) f *= 0.6 // overreaching eats into adaptation
   return f
 }
 
@@ -44,7 +45,7 @@ function gainAfter(months: number, monthly: number): number {
   return total
 }
 
-export function analyzeVTaper(measurements: Measurements, weeks: MesoWeek[]): VTaperAnalysis {
+export function analyzeVTaper(measurements: Measurements, weeks: MesoWeek[], i18n: I18n): VTaperAnalysis {
   const acc = weeks.filter((w) => !w.deload)
   const avg = (m: MuscleId) => (acc.length ? acc.reduce((a, w) => a + w.volume[m], 0) / acc.length : 0)
   const shAvg = avg('shoulders')
@@ -62,10 +63,10 @@ export function analyzeVTaper(measurements: Measurements, weeks: MesoWeek[]): VT
   const ratio = waist > 0 ? shoulders / waist : 0
   const mesoMonths = weeks.length / 4.345
   const horizons: Array<[string, number]> = [
-    ['Dziś', 0],
-    ['Po mezocyklu', mesoMonths],
-    ['6 miesięcy', 6],
-    ['12 miesięcy', 12],
+    [i18n.t('vt.today'), 0],
+    [i18n.t('vt.afterMeso'), mesoMonths],
+    [i18n.t('vt.m6'), 6],
+    [i18n.t('vt.m12'), 12],
   ]
   const projections = horizons.map(([label, months]) => {
     const sh = shoulders + gainAfter(months, monthlyGain)

@@ -1,4 +1,4 @@
-/** Deterministyczny generator pseudolosowy (mulberry32) — powtarzalne pęknięcia i odłamki. */
+/** Deterministic pseudo-random generator (mulberry32) — repeatable cracks and shards. */
 export function seededRandom(seed: number): () => number {
   let a = seed >>> 0
   return () => {
